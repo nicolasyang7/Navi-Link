@@ -197,6 +197,9 @@ public class FloatingWindowManager {
         if (activeWindow != null) {
             activeWindow.updateIntervalSpeed(0, "", 0, "", 0);
         }
+        if (clusterActiveWindow != null) {
+            clusterActiveWindow.updateIntervalSpeed(0, "", 0, "", 0);
+        }
     };
 
     private final Runnable longPressCheck = new Runnable() {
@@ -1395,6 +1398,15 @@ public class FloatingWindowManager {
                 handler.postDelayed(intervalSpeedTimeoutRunnable, 10000);
             } else {
                 activeWindow.updateIntervalSpeed(0, "", 0, "", 0);
+            }
+        }
+        if (clusterActiveWindow != null) {
+            boolean isInside = (endDistText != null && !endDistText.trim().isEmpty()) || avgSpeed > 0;
+            boolean isApproaching = startDist >= 0 && startDist <= 1000;
+            if (isInside || isApproaching) {
+                clusterActiveWindow.updateIntervalSpeed(startDist, startDistText, avgSpeed, endDistText, limitSpeed);
+            } else {
+                clusterActiveWindow.updateIntervalSpeed(0, "", 0, "", 0);
             }
         }
         checkAndUpdateOverspeed();
