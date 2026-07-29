@@ -453,6 +453,7 @@ public class FloatingWindowManager {
         if (activeWindow != null) {
             activeWindow.updateLaneLines(null);
         }
+        updateClusterFloatingWindowVisibility();
     }
 
     public void onCruiseEnded() {
@@ -481,6 +482,7 @@ public class FloatingWindowManager {
         if (activeWindow != null) {
             activeWindow.updateLaneLines(null);
         }
+        updateClusterFloatingWindowVisibility();
     }
 
     public boolean isNavigationJustEnded() {
