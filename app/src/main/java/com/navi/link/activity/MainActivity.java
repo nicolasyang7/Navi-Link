@@ -105,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean isTrafficLightIconEnabled = true;
     public int countdownFontIndex = 0;
     public boolean crossMapHideEnabled = false;
+    public boolean clusterCrossMapHideEnabled = false;
     public boolean hideLaneLineBg = false;
     public boolean hideCameraCapsuleBg = false;
     public int dayNightOption = 0;
@@ -392,6 +393,7 @@ public class MainActivity extends AppCompatActivity {
         countdownFontIndex = sp.getInt("countdown_font_index", 0);
         trafficLightStyle = sp.getInt("traffic_light_style", 0);
         crossMapHideEnabled = sp.getBoolean("hide_on_cross_map", false);
+        clusterCrossMapHideEnabled = sp.getBoolean("hide_on_cross_map_cluster", false);
         hideLaneLineBg = sp.getBoolean("hide_lane_line_bg", false);
         hideCameraCapsuleBg = sp.getBoolean("hide_camera_capsule_bg", false);
         dayNightOption = sp.getInt("app_day_night_option", 0);
@@ -465,6 +467,7 @@ public class MainActivity extends AppCompatActivity {
                 .putInt("countdown_font_index", countdownFontIndex)
                 .putInt("traffic_light_style", trafficLightStyle)
                 .putBoolean("hide_on_cross_map", crossMapHideEnabled)
+                .putBoolean("hide_on_cross_map_cluster", clusterCrossMapHideEnabled)
                 .putBoolean("hide_lane_line_bg", hideLaneLineBg)
                 .putBoolean("hide_camera_capsule_bg", hideCameraCapsuleBg)
                 .putInt("app_day_night_option", dayNightOption)

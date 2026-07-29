@@ -1771,7 +1771,7 @@ public class FloatingWindowManager {
 
         SharedPreferences sp = context.getSharedPreferences("floating_config", Context.MODE_PRIVATE);
         boolean hideOnForeground = sp.getBoolean("hide_on_amap_foreground", false);
-        boolean hideOnCrossMap = sp.getBoolean("hide_on_cross_map", false);
+        boolean hideOnCrossMap = sp.getBoolean("hide_on_cross_map_cluster", false);
         boolean shouldHide = (hideOnForeground && isAmapForeground)
                 || (hideOnCrossMap && cachedCrossMap == 1 && currentMode == MODE_NAVI);
 

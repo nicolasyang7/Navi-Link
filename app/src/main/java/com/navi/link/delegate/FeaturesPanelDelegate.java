@@ -50,6 +50,10 @@ public class FeaturesPanelDelegate {
     private SwitchCompat cbHideMainWhenClusterActive;
     private TextView tvHideMainWhenClusterActiveStatus;
 
+    private MaterialCardView cardClusterCrossMapHideToggle;
+    private SwitchCompat cbClusterCrossMapHideEnabled;
+    private TextView tvClusterCrossMapHideStatus;
+
     public FeaturesPanelDelegate(MainActivity activity) {
         this.activity = activity;
     }
@@ -83,6 +87,10 @@ public class FeaturesPanelDelegate {
         cardHideMainWhenClusterActive = activity.findViewById(R.id.card_hide_main_when_cluster_active);
         cbHideMainWhenClusterActive = activity.findViewById(R.id.cb_hide_main_when_cluster_active);
         tvHideMainWhenClusterActiveStatus = activity.findViewById(R.id.tv_hide_main_when_cluster_active_status);
+
+        cardClusterCrossMapHideToggle = activity.findViewById(R.id.card_cluster_cross_map_hide_toggle);
+        cbClusterCrossMapHideEnabled = activity.findViewById(R.id.cb_cluster_cross_map_hide_enabled);
+        tvClusterCrossMapHideStatus = activity.findViewById(R.id.tv_cluster_cross_map_hide_status);
 
         setupListeners();
     }
@@ -191,6 +199,25 @@ public class FeaturesPanelDelegate {
             });
         }
 
+        if (cbClusterCrossMapHideEnabled != null) {
+            cbClusterCrossMapHideEnabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                activity.clusterCrossMapHideEnabled = isChecked;
+                activity.savePreferences();
+                if (tvClusterCrossMapHideStatus != null) {
+                    tvClusterCrossMapHideStatus.setText(isChecked ? "路口放大图时副屏隐藏" : "路口放大图时副屏正常显示");
+                }
+                FloatingWindowManager fwm = FloatingWindowManager.getInstance();
+                if (fwm != null) {
+                    fwm.updateClusterFloatingWindowVisibility();
+                }
+            });
+        }
+        if (cardClusterCrossMapHideToggle != null) {
+            cardClusterCrossMapHideToggle.setOnClickListener(v -> {
+                if (cbClusterCrossMapHideEnabled != null) cbClusterCrossMapHideEnabled.toggle();
+            });
+        }
+
         if (cardClusterDisplaySelect != null) {
             cardClusterDisplaySelect.setOnClickListener(v -> showClusterDisplaySelectionDialog());
         }
@@ -273,6 +300,13 @@ public class FeaturesPanelDelegate {
         if (cbHideMainWhenClusterActive != null) cbHideMainWhenClusterActive.setChecked(activity.hideMainWhenClusterActive);
         if (tvHideMainWhenClusterActiveStatus != null) {
             tvHideMainWhenClusterActiveStatus.setText(activity.hideMainWhenClusterActive ? "副屏成功显示后自动隐藏主屏悬浮窗" : "已关闭该功能，主副屏同时显示");
+        }
+
+        if (cbClusterCrossMapHideEnabled != null) {
+            cbClusterCrossMapHideEnabled.setChecked(activity.clusterCrossMapHideEnabled);
+        }
+        if (tvClusterCrossMapHideStatus != null) {
+            tvClusterCrossMapHideStatus.setText(activity.clusterCrossMapHideEnabled ? "路口放大图时副屏隐藏" : "路口放大图时副屏正常显示");
         }
 
         if (tvClusterDisplaySelectStatus != null) {
