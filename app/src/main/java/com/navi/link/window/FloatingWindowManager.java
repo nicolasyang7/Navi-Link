@@ -1771,7 +1771,9 @@ public class FloatingWindowManager {
 
         SharedPreferences sp = context.getSharedPreferences("floating_config", Context.MODE_PRIVATE);
         boolean hideOnForeground = sp.getBoolean("hide_on_amap_foreground", false);
-        boolean shouldHide = hideOnForeground && isAmapForeground;
+        boolean hideOnCrossMap = sp.getBoolean("hide_on_cross_map", false);
+        boolean shouldHide = (hideOnForeground && isAmapForeground)
+                || (hideOnCrossMap && cachedCrossMap == 1 && currentMode == MODE_NAVI);
 
         if (shouldHide || !isShowing) {
             clusterFloatingView.setVisibility(View.GONE);
