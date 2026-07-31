@@ -46,9 +46,6 @@ public class FloatingWindowManager {
     private static final long LIGHT_HIDE_TIMEOUT_MS = 5000;
     private static final long LONG_PRESS_MS = 500;
     private static final long NAVI_TIMEOUT_MS = 6000;
-    // 改为12秒：与STATE=40(~10秒间隔)配合，保证巡航暂停后看门狗能被保活
-    // 若广播完全停止（退出高德），12秒后正常触发隐藏
-    private static final long WATCHDOG_TIMEOUT_MS = 12000;
     private static final int TRAFFIC_LIGHT_BEEP_THRESHOLD = 3;
 
     public static final int MODE_CRUISE = 0;
@@ -187,11 +184,6 @@ public class FloatingWindowManager {
     private final Runnable naviSwitchRunnable = this::doNaviSwitch;
     private final Runnable naviTimeoutRunnable = this::onNaviTimeout;
     private final Runnable cruiseGraceRunnable = this::onCruiseGrace;
-    private final Runnable watchdogRunnable = () -> {
-        hasActiveData = false;
-        hasEverReceivedData = false;
-        updateFloatingWindowVisibility();
-    };
     private final Runnable trafficLightTimeoutRunnable = this::hideTrafficLightCapsule;
     private final Runnable intervalSpeedTimeoutRunnable = () -> {
         if (activeWindow != null) {
@@ -444,7 +436,6 @@ public class FloatingWindowManager {
         handler.removeCallbacks(naviTimeoutRunnable);
         handler.removeCallbacks(naviSwitchRunnable);
         handler.removeCallbacks(cruiseGraceRunnable);
-        handler.removeCallbacks(watchdogRunnable);
 
         // 2. 立即隐藏视图
         if (floatingView != null) {
@@ -473,7 +464,6 @@ public class FloatingWindowManager {
         handler.removeCallbacks(naviTimeoutRunnable);
         handler.removeCallbacks(naviSwitchRunnable);
         handler.removeCallbacks(cruiseGraceRunnable);
-        handler.removeCallbacks(watchdogRunnable);
 
         // 2. 立即隐藏视图
         if (floatingView != null) {
@@ -532,11 +522,14 @@ public class FloatingWindowManager {
         handler.removeCallbacks(cruiseGraceRunnable);
     }
 
+    /**
+     * 标记收到活动数据。
+     * 不再有看门狗定时隐藏：窗口显示后保持显示，
+     * 直到收到 STATE=9/25（导航/巡航结束）或用户手动关闭才隐藏
+     */
     public void resetWatchdog() {
         hasActiveData = true;
         hasEverReceivedData = true;
-        handler.removeCallbacks(watchdogRunnable);
-        handler.postDelayed(watchdogRunnable, WATCHDOG_TIMEOUT_MS);
         updateFloatingWindowVisibility();
     }
 

@@ -56,8 +56,7 @@ public class AmapNaviReceiver extends BroadcastReceiver {
             } else if (extraState == 25) {
                 manager.onCruiseEnded();
             } else if (extraState == 40) {
-                // 40 是保活信号：已有过数据才激活（避免刚启动无数据显示窗口）
-                // 巡航暂停后仍能保活
+                // 40 是状态信号：已有过数据才标记活动（避免刚启动无数据显示窗口）
                 if (manager.hasEverReceivedData() && !manager.isNavigationJustEnded() && !manager.isCruiseJustEnded()) {
                     manager.resetWatchdog();
                 }
