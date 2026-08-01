@@ -54,6 +54,11 @@ public class FeaturesPanelDelegate {
     private SwitchCompat cbClusterCrossMapHideEnabled;
     private TextView tvClusterCrossMapHideStatus;
 
+    private MaterialCardView cardClickAction;
+    private TextView tvClickActionStatus;
+    private MaterialCardView cardDoubleClickAction;
+    private TextView tvDoubleClickActionStatus;
+
     public FeaturesPanelDelegate(MainActivity activity) {
         this.activity = activity;
     }
@@ -233,6 +238,74 @@ public class FeaturesPanelDelegate {
                 activity.startActivity(intent);
             });
         }
+
+        cardClickAction = activity.findViewById(R.id.card_click_action);
+        tvClickActionStatus = activity.findViewById(R.id.tv_click_action_status);
+        cardDoubleClickAction = activity.findViewById(R.id.card_double_click_action);
+        tvDoubleClickActionStatus = activity.findViewById(R.id.tv_double_click_action_status);
+
+        if (cardClickAction != null) {
+            cardClickAction.setOnClickListener(v -> showClickActionDialog(false));
+        }
+        if (cardDoubleClickAction != null) {
+            cardDoubleClickAction.setOnClickListener(v -> showClickActionDialog(true));
+        }
+    }
+
+    /** 单击/双击行为设置弹窗 */
+    private void showClickActionDialog(final boolean isDouble) {
+        final String title = isDouble ? "双击窗口行为" : "单击窗口行为";
+        final int currentAction = isDouble ? activity.doubleClickAction : activity.clickAction;
+        String[] items = {"打开设置页", "打开应用"};
+        new android.app.AlertDialog.Builder(activity)
+                .setTitle(title)
+                .setSingleChoiceItems(items, currentAction, (dialog, which) -> {
+                    if (which == 0) {
+                        // 打开设置页
+                        if (isDouble) {
+                            activity.doubleClickAction = 0;
+                            activity.doubleClickAppPackage = "";
+                        } else {
+                            activity.clickAction = 0;
+                            activity.clickAppPackage = "";
+                        }
+                        activity.savePreferences();
+                        dialog.dismiss();
+                        updateClickActionStatusTexts();
+                    } else {
+                        // 打开应用 → 弹应用列表
+                        dialog.dismiss();
+                        activity.showAppPickerDialog("选择要打开的应用", pkg -> {
+                            if (isDouble) {
+                                activity.doubleClickAction = 1;
+                                activity.doubleClickAppPackage = pkg;
+                            } else {
+                                activity.clickAction = 1;
+                                activity.clickAppPackage = pkg;
+                            }
+                            activity.savePreferences();
+                            updateClickActionStatusTexts();
+                        });
+                    }
+                })
+                .show();
+    }
+
+    private void updateClickActionStatusTexts() {
+        if (tvClickActionStatus != null) {
+            if (activity.clickAction == 1) {
+                tvClickActionStatus.setText("单击打开应用: " + activity.getAppLabel(activity.clickAppPackage));
+            } else {
+                tvClickActionStatus.setText("单击打开设置页");
+            }
+        }
+        if (tvDoubleClickActionStatus != null) {
+            if (activity.doubleClickAction == 1) {
+                tvDoubleClickActionStatus.setText("双击打开应用: " + activity.getAppLabel(activity.doubleClickAppPackage));
+            } else {
+                tvDoubleClickActionStatus.setText("双击打开设置页");
+            }
+        }
     }
 
     public void showClusterDisplaySelectionDialog() {
@@ -312,6 +385,8 @@ public class FeaturesPanelDelegate {
         if (tvClusterDisplaySelectStatus != null) {
             tvClusterDisplaySelectStatus.setText(activity.clusterDisplayId != -1 ? ("已选择: ID " + activity.clusterDisplayId) : "默认自动检测显示器");
         }
+
+        updateClickActionStatusTexts();
     }
 
     public void updateThemeColors() {

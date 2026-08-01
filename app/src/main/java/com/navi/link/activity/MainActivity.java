@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.ColorStateList;
 import android.util.TypedValue;
 import android.graphics.Color;
@@ -31,6 +32,8 @@ import android.widget.Toast;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import android.app.AlertDialog;
 
@@ -109,6 +112,12 @@ public class MainActivity extends AppCompatActivity {
     public boolean hideLaneLineBg = false;
     public boolean hideCameraCapsuleBg = false;
     public int dayNightOption = 0;
+
+    // 窗口点击行为（0=打开设置页，1=打开应用）
+    public int clickAction = 0;
+    public String clickAppPackage = "";
+    public int doubleClickAction = 0;
+    public String doubleClickAppPackage = "";
 
     public int themeColor = 0xFF4FC3F7;
 
@@ -397,6 +406,10 @@ public class MainActivity extends AppCompatActivity {
         hideLaneLineBg = sp.getBoolean("hide_lane_line_bg", false);
         hideCameraCapsuleBg = sp.getBoolean("hide_camera_capsule_bg", false);
         dayNightOption = sp.getInt("app_day_night_option", 0);
+        clickAction = sp.getInt("click_action", 0);
+        clickAppPackage = sp.getString("click_app_package", "");
+        doubleClickAction = sp.getInt("double_click_action", 0);
+        doubleClickAppPackage = sp.getString("double_click_app_package", "");
 
         // Delegates Load Settings
         systemAppearanceDelegate.loadSettings();
@@ -471,6 +484,10 @@ public class MainActivity extends AppCompatActivity {
                 .putBoolean("hide_lane_line_bg", hideLaneLineBg)
                 .putBoolean("hide_camera_capsule_bg", hideCameraCapsuleBg)
                 .putInt("app_day_night_option", dayNightOption)
+                .putInt("click_action", clickAction)
+                .putString("click_app_package", clickAppPackage)
+                .putInt("double_click_action", doubleClickAction)
+                .putString("double_click_app_package", doubleClickAppPackage)
                 .apply();
     }
 
@@ -700,6 +717,89 @@ public class MainActivity extends AppCompatActivity {
                     setStartupMode(2);
                 })
                 .show();
+    }
+
+    /** 应用选择回调 */
+    public interface OnAppPickedListener {
+        void onAppPicked(String packageName);
+    }
+
+    /**
+     * 通用应用选择弹窗：扫描所有可启动应用（排除自身），
+     * 样式与"选择高德"一致（item_app_list）
+     */
+    public void showAppPickerDialog(String title, final OnAppPickedListener listener) {
+        final PackageManager pm = getPackageManager();
+        Intent mainIntent = new Intent(Intent.ACTION_MAIN);
+        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        final List<ResolveInfo> resolveInfos = pm.queryIntentActivities(mainIntent, 0);
+        final List<ResolveInfo> filtered = new ArrayList<>();
+        final String selfPackage = getPackageName();
+        for (ResolveInfo ri : resolveInfos) {
+            if (ri.activityInfo != null && !selfPackage.equals(ri.activityInfo.packageName)) {
+                filtered.add(ri);
+            }
+        }
+
+        if (filtered.isEmpty()) {
+            Toast.makeText(this, "未找到可启动的应用", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 按应用名排序
+        Collections.sort(filtered, new Comparator<ResolveInfo>() {
+            @Override
+            public int compare(ResolveInfo a, ResolveInfo b) {
+                String la = a.loadLabel(pm).toString();
+                String lb = b.loadLabel(pm).toString();
+                return la.compareToIgnoreCase(lb);
+            }
+        });
+
+        ArrayAdapter<ResolveInfo> adapter = new ArrayAdapter<ResolveInfo>(this, R.layout.item_app_list, filtered) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                if (convertView == null) {
+                    convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_app_list, parent, false);
+                }
+                ResolveInfo ri = getItem(position);
+                ImageView icon = convertView.findViewById(R.id.iv_app_icon);
+                TextView name = convertView.findViewById(R.id.tv_app_name);
+                TextView pkg = convertView.findViewById(R.id.tv_app_package);
+                if (ri != null && ri.activityInfo != null) {
+                    icon.setImageDrawable(ri.loadIcon(pm));
+                    name.setText(ri.loadLabel(pm).toString());
+                    name.setTextColor(getThemeColorAttr(R.attr.panelTextColorPrimary));
+                    pkg.setText(ri.activityInfo.packageName);
+                    pkg.setTextColor(getThemeColorAttr(R.attr.panelTextColorSecondary));
+                }
+                return convertView;
+            }
+        };
+
+        new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setAdapter(adapter, (dialog, which) -> {
+                    String pkgName = filtered.get(which).activityInfo.packageName;
+                    if (listener != null) {
+                        listener.onAppPicked(pkgName);
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    /** 获取应用显示名（找不到返回包名） */
+    public String getAppLabel(String packageName) {
+        if (TextUtils.isEmpty(packageName)) return "";
+        try {
+            PackageManager pm = getPackageManager();
+            ApplicationInfo info = pm.getApplicationInfo(packageName, 0);
+            CharSequence label = pm.getApplicationLabel(info);
+            return label != null ? label.toString() : packageName;
+        } catch (Exception e) {
+            return packageName;
+        }
     }
 
     public void selectStyle(int mode) {

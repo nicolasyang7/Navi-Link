@@ -46,6 +46,9 @@ public class FloatingWindowManager {
     private static final long LIGHT_HIDE_TIMEOUT_MS = 5000;
     private static final long LONG_PRESS_MS = 500;
     private static final long NAVI_TIMEOUT_MS = 6000;
+    private static final long DOUBLE_CLICK_TIMEOUT_MS = 300; // 双击判定窗口
+    private static final long CLICK_DELAY_MS = 250;          // 单击延迟（等待可能的第二击）
+    private static final float DOUBLE_CLICK_SLOP = 40f;      // 两次点击允许位移之和阈值
     private static final int TRAFFIC_LIGHT_BEEP_THRESHOLD = 3;
 
     public static final int MODE_CRUISE = 0;
@@ -203,6 +206,17 @@ public class FloatingWindowManager {
             Toast.makeText(context, isPositionLocked ? "位置已锁定" : "位置已解锁", Toast.LENGTH_SHORT).show();
         }
     };
+
+    // 单击延迟执行（等待双击窗口期，被双击取消）
+    private final Runnable singleClickRunnable = () -> {
+        lastClickUpTime = 0;
+        performClickAction(false);
+    };
+
+    // 双击检测状态
+    private long lastClickUpTime = 0;
+    private float lastClickUpX = 0;
+    private float lastClickUpY = 0;
 
     // ======================== 构造与单例 ========================
 
@@ -1116,19 +1130,29 @@ public class FloatingWindowManager {
             }
             handler.removeCallbacks(longPressCheck);
 
-            // 单击（非拖拽、非长按）→ 打开设置页
+            // 单击/双击检测（非拖拽、非长按）
             if (!isDragging && !hasLongPressed && action == MotionEvent.ACTION_UP) {
-                Intent intent = new Intent(context, MainActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                try {
-                    int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        flags |= PendingIntent.FLAG_IMMUTABLE;
-                    }
-                    PendingIntent.getActivity(context, 0, intent, flags).send();
-                } catch (PendingIntent.CanceledException e) {
-                    context.startActivity(intent);
+                long now = System.currentTimeMillis();
+                float upX = motionEvent.getRawX();
+                float upY = motionEvent.getRawY();
+                long gap = now - lastClickUpTime;
+                float dist = Math.abs(upX - lastClickUpX) + Math.abs(upY - lastClickUpY);
+                if (gap < DOUBLE_CLICK_TIMEOUT_MS && dist < DOUBLE_CLICK_SLOP) {
+                    // 双击：取消挂起的单击，直接执行双击动作
+                    handler.removeCallbacks(singleClickRunnable);
+                    lastClickUpTime = 0;
+                    performClickAction(true);
+                } else {
+                    // 单击：延迟执行，等待可能的第二击
+                    lastClickUpTime = now;
+                    lastClickUpX = upX;
+                    lastClickUpY = upY;
+                    handler.removeCallbacks(singleClickRunnable);
+                    handler.postDelayed(singleClickRunnable, CLICK_DELAY_MS);
                 }
+            } else {
+                // 拖拽/长按结束后重置双击状态，防止紧接的点击被误判为双击
+                lastClickUpTime = 0;
             }
 
             // 拖拽结束后保存位置
@@ -1138,6 +1162,51 @@ public class FloatingWindowManager {
 
             return true;
         });
+    }
+
+    /**
+     * 执行窗口点击动作（实时读 SP，配置修改后无需重建窗口）
+     * @param isDouble true=双击动作，false=单击动作
+     */
+    private void performClickAction(boolean isDouble) {
+        SharedPreferences sp = context.getSharedPreferences("floating_config", Context.MODE_PRIVATE);
+        int action = sp.getInt(isDouble ? "double_click_action" : "click_action", 0);
+        String pkg = sp.getString(isDouble ? "double_click_app_package" : "click_app_package", "");
+        if (action == 1 && !android.text.TextUtils.isEmpty(pkg)) {
+            launchApp(pkg);
+        } else {
+            openMainActivity();
+        }
+    }
+
+    /** 打开 Navi-Link 设置页 */
+    private void openMainActivity() {
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        try {
+            int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                flags |= PendingIntent.FLAG_IMMUTABLE;
+            }
+            PendingIntent.getActivity(context, 0, intent, flags).send();
+        } catch (PendingIntent.CanceledException e) {
+            context.startActivity(intent);
+        }
+    }
+
+    /** 启动指定应用 */
+    private void launchApp(String packageName) {
+        try {
+            Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(packageName);
+            if (launchIntent != null) {
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(launchIntent);
+            } else {
+                Toast.makeText(context, "应用未安装或不可启动", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(context, "无法打开应用", Toast.LENGTH_SHORT).show();
+        }
     }
 
     // ======================== 巡航数据更新 ========================
