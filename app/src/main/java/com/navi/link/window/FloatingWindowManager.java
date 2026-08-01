@@ -95,7 +95,7 @@ public class FloatingWindowManager {
     private int themeColor = 0xFF4FC3F7;
     private boolean isShowing = false;
     private boolean hasActiveData = false; // 是否收到过实际导航/巡航广播数据
-    private boolean hasEverReceivedData = false; // 是否曾经收到过数据（用于STATE=40保活判断）
+    private boolean hasEverReceivedData = false; // 是否曾经收到过真实数据（10001/60073/12110）
     private float clusterScale = 1.0f;
 
     // 昼夜模式

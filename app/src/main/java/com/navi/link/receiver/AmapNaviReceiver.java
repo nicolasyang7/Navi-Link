@@ -55,11 +55,6 @@ public class AmapNaviReceiver extends BroadcastReceiver {
                 manager.onNavigationEnded();
             } else if (extraState == 25) {
                 manager.onCruiseEnded();
-            } else if (extraState == 40) {
-                // 40 是状态信号：已有过数据才标记活动（避免刚启动无数据显示窗口）
-                if (manager.hasEverReceivedData() && !manager.isNavigationJustEnded() && !manager.isCruiseJustEnded()) {
-                    manager.resetWatchdog();
-                }
             }
 
             // 路口放大图状态（EXTRA_CROSS_MAP = 1 表示有路口放大图）
@@ -88,12 +83,17 @@ public class AmapNaviReceiver extends BroadcastReceiver {
         }
 
         if (keyType == 60073) {
-            // 红绿灯数据也视为有活动数据，重置 5秒 看门狗
+            // 红绿灯数据也视为有活动数据
             manager.resetWatchdog();
-            // 红绿灯数据
-            handleTrafficLight(intent, manager);
-            if (manager.getCurrentMode() == FloatingWindowManager.MODE_NAVI) {
-                manager.resetNaviTimeout();
+            // 双高德共存时：导航模式下仅处理带 trafficLightStatus 的导航红绿灯广播，
+            // 巡航红绿灯广播（lightsData 格式）不更新导航窗口、也不续导航超时
+            boolean isNaviLight = manager.getCurrentMode() != FloatingWindowManager.MODE_NAVI
+                    || intent.hasExtra("trafficLightStatus");
+            if (isNaviLight) {
+                handleTrafficLight(intent, manager);
+                if (manager.getCurrentMode() == FloatingWindowManager.MODE_NAVI) {
+                    manager.resetNaviTimeout();
+                }
             }
             return;
         }
@@ -133,12 +133,12 @@ public class AmapNaviReceiver extends BroadcastReceiver {
                 manager.switchToNaviMode();
                 handleNaviInfo(intent, manager);
             } else {
-                if (manager.getCurrentMode() == FloatingWindowManager.MODE_NAVI || manager.isNaviWindowActive()) {
-                    // 导航模式但无新icon，或当前依然是导航窗口，立即切换到巡航模式
-                    manager.switchToCruiseMode();
-                }
-                // 巡航模式：只有巡航启用时才处理数据
-                if (manager.isCruiseEnabled()) {
+                // ICON=0：巡航数据
+                // 双高德共存时（预装版后台巡航 + 改装版前台导航），巡航广播会立即打断导航
+                // 导致导航/巡航窗口来回闪，因此导航模式下忽略巡航广播：
+                // 不切模式、不更新巡航缓存（避免污染导航速度与超速提醒逻辑）
+                // 导航结束后由 6 秒导航超时（resetNaviTimeout）自动切回巡航
+                if (manager.getCurrentMode() == FloatingWindowManager.MODE_CRUISE && manager.isCruiseEnabled()) {
                     handleCruiseInfo(intent, manager);
                 }
             }
