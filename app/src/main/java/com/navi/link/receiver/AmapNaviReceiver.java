@@ -70,9 +70,8 @@ public class AmapNaviReceiver extends BroadcastReceiver {
 
         if (keyType == 12110) {
             manager.resetWatchdog();
-            if (manager.getCurrentMode() == FloatingWindowManager.MODE_NAVI) {
-                manager.resetNaviTimeout();
-            }
+            // 区间测速广播不续导航超时：双高德共存时无法区分来源（导航/巡航字段相同），
+            // 导航活跃只由 10001 ICON!=0 定义，避免后台巡航高德的区间测速广播无限续命
             int startDist = getIntSafe(intent, "START_DISTANCE", -1);
             String startDistText = intent.getStringExtra("START_DISTANCE_TEXT");
             int avgSpeed = getIntSafe(intent, "AVERAGE_SPEED", 0);
@@ -85,11 +84,11 @@ public class AmapNaviReceiver extends BroadcastReceiver {
         if (keyType == 60073) {
             // 红绿灯数据也视为有活动数据
             manager.resetWatchdog();
-            // 双高德共存时：导航模式下仅处理带 trafficLightStatus 的导航红绿灯广播，
-            // 巡航红绿灯广播（lightsData 格式）不更新导航窗口、也不续导航超时
-            boolean isNaviLight = manager.getCurrentMode() != FloatingWindowManager.MODE_NAVI
-                    || intent.hasExtra("trafficLightStatus");
-            if (isNaviLight) {
+            // 双高德共存：导航模式下忽略巡航多灯红绿灯广播（带非空 lightsData），
+            // 只处理导航单灯红绿灯（trafficLightStatus），避免巡航灯组污染导航窗口
+            String cruiseLights = intent.getStringExtra("lightsData");
+            boolean hasCruiseLights = cruiseLights != null && !cruiseLights.trim().isEmpty();
+            if (manager.getCurrentMode() != FloatingWindowManager.MODE_NAVI || !hasCruiseLights) {
                 handleTrafficLight(intent, manager);
                 if (manager.getCurrentMode() == FloatingWindowManager.MODE_NAVI) {
                     manager.resetNaviTimeout();
@@ -139,6 +138,11 @@ public class AmapNaviReceiver extends BroadcastReceiver {
                 // 不切模式、不更新巡航缓存（避免污染导航速度与超速提醒逻辑）
                 // 导航结束后由 6 秒导航超时（resetNaviTimeout）自动切回巡航
                 if (manager.getCurrentMode() == FloatingWindowManager.MODE_CRUISE && manager.isCruiseEnabled()) {
+                    // 导航结束信号（STATE=9）只切模式不重建窗口，此时窗口仍是导航布局：
+                    // 巡航数据到达时先重建为巡航窗口再更新数据
+                    if (manager.isNaviWindowActive()) {
+                        manager.switchToCruiseMode();
+                    }
                     handleCruiseInfo(intent, manager);
                 }
             }
