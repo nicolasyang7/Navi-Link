@@ -176,9 +176,12 @@ public class FloatingWindowManager {
 
     private int cachedCrossMap = 0;
 
-    // 超速警告红色边框
+    // 超速警告红色边框（主屏）
     private View overspeedBorderView;
     private ObjectAnimator borderAnimator;
+    // 超速警告红色边框（副屏）
+    private View clusterOverspeedBorderView;
+    private ObjectAnimator clusterBorderAnimator;
 
 //    private MediaPlayer trafficLightBeepPlayer;
 //    private boolean trafficLightBeepPlayed;
@@ -1307,34 +1310,54 @@ public class FloatingWindowManager {
     // ======================== 超速警告红色边框 ========================
 
     private void setOverspeedWarning(boolean isOverspeed) {
-        if (overspeedBorderView == null) return;
+        // 主副屏同步：与主屏同一套超速红框逻辑
+        setOverspeedWarningFor(overspeedBorderView, isOverspeed, false);
+        setOverspeedWarningFor(clusterOverspeedBorderView, isOverspeed, true);
+    }
+
+    private void setOverspeedWarningFor(View borderView, boolean isOverspeed, boolean isCluster) {
+        if (borderView == null) return;
+        ObjectAnimator animator = isCluster ? clusterBorderAnimator : borderAnimator;
         if (isOverspeed) {
-            overspeedBorderView.setVisibility(View.VISIBLE);
-            if (borderAnimator == null || !borderAnimator.isRunning()) {
-                startBorderBlink();
+            borderView.setVisibility(View.VISIBLE);
+            if (animator == null || !animator.isRunning()) {
+                startBorderBlink(borderView, isCluster);
             }
         } else {
-            stopBorderBlink();
-            overspeedBorderView.setVisibility(View.GONE);
+            stopBorderBlink(borderView, isCluster);
+            borderView.setVisibility(View.GONE);
         }
     }
 
-    private void startBorderBlink() {
-        if (borderAnimator != null) borderAnimator.cancel();
-        borderAnimator = ObjectAnimator.ofFloat(overspeedBorderView, "alpha", 1.0f, 0.2f);
-        borderAnimator.setDuration(500);
-        borderAnimator.setRepeatMode(ValueAnimator.REVERSE);
-        borderAnimator.setRepeatCount(ValueAnimator.INFINITE);
-        borderAnimator.start();
+    private void startBorderBlink(View borderView, boolean isCluster) {
+        ObjectAnimator animator = ObjectAnimator.ofFloat(borderView, "alpha", 1.0f, 0.2f);
+        animator.setDuration(500);
+        animator.setRepeatMode(ValueAnimator.REVERSE);
+        animator.setRepeatCount(ValueAnimator.INFINITE);
+        if (isCluster) {
+            if (clusterBorderAnimator != null) clusterBorderAnimator.cancel();
+            clusterBorderAnimator = animator;
+        } else {
+            if (borderAnimator != null) borderAnimator.cancel();
+            borderAnimator = animator;
+        }
+        animator.start();
     }
 
-    private void stopBorderBlink() {
-        if (borderAnimator != null) {
-            borderAnimator.cancel();
-            borderAnimator = null;
+    private void stopBorderBlink(View borderView, boolean isCluster) {
+        if (isCluster) {
+            if (clusterBorderAnimator != null) {
+                clusterBorderAnimator.cancel();
+                clusterBorderAnimator = null;
+            }
+        } else {
+            if (borderAnimator != null) {
+                borderAnimator.cancel();
+                borderAnimator = null;
+            }
         }
-        if (overspeedBorderView != null) {
-            overspeedBorderView.setAlpha(1f);
+        if (borderView != null) {
+            borderView.setAlpha(1f);
         }
     }
 
@@ -1734,15 +1757,16 @@ public class FloatingWindowManager {
 
             View inflated = LayoutInflater.from(clusterContext).inflate(layoutRes, null);
             applyCustomWindowWidth(inflated, layoutRes);
-            clusterFloatingView = inflated;
+
+            // 统一包裹 FrameLayout：超速红色边框覆盖层与内容共用同一容器（与主屏一致）
+            FrameLayout clusterWrapper = new FrameLayout(clusterContext);
+            clusterWrapper.setClipChildren(false);
+            clusterWrapper.setClipToPadding(false);
+            clusterWrapper.addView(inflated, new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.WRAP_CONTENT,
+                    FrameLayout.LayoutParams.WRAP_CONTENT));
 
             if (currentMode == MODE_NAVI && styleMode >= 1) {
-                FrameLayout frameLayout = new FrameLayout(clusterContext);
-                frameLayout.setClipChildren(false);
-                frameLayout.setClipToPadding(false);
-                frameLayout.addView(inflated, new FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT));
-                clusterFloatingView = frameLayout;
                 clusterScaleTarget = inflated;
             } else {
                 clusterScaleTarget = null;
@@ -1752,6 +1776,27 @@ public class FloatingWindowManager {
             if (scale != 1.0f) {
                 physicalScaleContent(inflated, scale);
             }
+
+            // 创建超速红色边框覆盖层（圆角跟随窗口样式，与主屏逻辑一致）
+            boolean clusterIsIslandStyle = effectiveStyle == 1;
+            int clusterCornerDp = clusterIsIslandStyle ? 40 : 12;
+            int clusterCornerPx = Math.round(dpToPx(clusterCornerDp) * getClusterScale());
+            View clusterBorderView = new View(clusterContext);
+            GradientDrawable clusterBorderDrawable = new GradientDrawable();
+            clusterBorderDrawable.setShape(GradientDrawable.RECTANGLE);
+            clusterBorderDrawable.setStroke(Math.round(dpToPx(3) * getClusterScale()), Color.RED);
+            clusterBorderDrawable.setColor(Color.TRANSPARENT);
+            clusterBorderDrawable.setCornerRadius(clusterCornerPx);
+            clusterBorderView.setBackground(clusterBorderDrawable);
+            clusterBorderView.setVisibility(View.GONE);
+            clusterBorderView.setClickable(false);
+            clusterBorderView.setFocusable(false);
+            clusterWrapper.addView(clusterBorderView, new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT));
+            clusterOverspeedBorderView = clusterBorderView;
+
+            clusterFloatingView = clusterWrapper;
 
             clusterActiveWindow = FloatingWindowFactory.createWindow(currentMode, effectiveStyle, clusterContext, inflated);
             if (clusterActiveWindow != null) {
@@ -1811,6 +1856,9 @@ public class FloatingWindowManager {
     }
 
     private void dismissClusterMirror() {
+        // 停止副屏超速红框闪烁动画，避免视图移除后动画泄漏
+        stopBorderBlink(clusterOverspeedBorderView, true);
+        clusterOverspeedBorderView = null;
         if (clusterFloatingView != null && clusterWindowManager != null) {
             try {
                 clusterWindowManager.removeViewImmediate(clusterFloatingView);
