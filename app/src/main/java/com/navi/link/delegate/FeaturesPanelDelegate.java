@@ -13,7 +13,7 @@ import android.view.Display;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.appcompat.widget.SwitchCompat;
+import com.navi.link.view.SwitchButton;
 import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
@@ -22,24 +22,24 @@ import java.util.List;
 public class FeaturesPanelDelegate {
     private final MainActivity activity;
 
-    private SwitchCompat cbAvoidForegroundEnabled;
+    private SwitchButton cbAvoidForegroundEnabled;
     private TextView tvAvoidForegroundStatus;
     private MaterialCardView cardAvoidForegroundToggle;
 
-    private SwitchCompat cbCrossMapHideEnabled;
+    private SwitchButton cbCrossMapHideEnabled;
     private TextView tvCrossMapHideStatus;
     private MaterialCardView cardCrossMapHideToggle;
 
-    private SwitchCompat cbHideLaneLineBgEnabled;
+    private SwitchButton cbHideLaneLineBgEnabled;
     private TextView tvHideLaneLineBgStatus;
     private MaterialCardView cardHideLaneLineBgToggle;
 
-    private SwitchCompat cbHideCameraCapsuleBgEnabled;
+    private SwitchButton cbHideCameraCapsuleBgEnabled;
     private TextView tvHideCameraCapsuleBgStatus;
     private MaterialCardView cardHideCameraCapsuleBgToggle;
 
     private MaterialCardView cardClusterMirrorToggle;
-    private SwitchCompat cbClusterMirrorEnabled;
+    private SwitchButton cbClusterMirrorEnabled;
     private TextView tvClusterMirrorStatus;
 
     private MaterialCardView cardClusterDisplaySelect;
@@ -48,11 +48,11 @@ public class FeaturesPanelDelegate {
     private TextView btnAdjustClusterPos;
 
     private MaterialCardView cardHideMainWhenClusterActive;
-    private SwitchCompat cbHideMainWhenClusterActive;
+    private SwitchButton cbHideMainWhenClusterActive;
     private TextView tvHideMainWhenClusterActiveStatus;
 
     private MaterialCardView cardClusterCrossMapHideToggle;
-    private SwitchCompat cbClusterCrossMapHideEnabled;
+    private SwitchButton cbClusterCrossMapHideEnabled;
     private TextView tvClusterCrossMapHideStatus;
 
     private MaterialCardView cardClickAction;

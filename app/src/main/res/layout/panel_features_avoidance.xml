@@ -85,7 +85,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_auto_start_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -143,7 +143,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_cruise_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -207,7 +207,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_hide_camera_capsule_bg_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -259,7 +259,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_avoid_foreground_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -317,7 +317,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_cross_map_hide_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -380,7 +380,7 @@
                                     android:layout_height="wrap_content" />
                             </LinearLayout>
 
-                            <androidx.appcompat.widget.SwitchCompat
+                            <com.navi.link.view.SwitchButton
                                 android:id="@+id/cb_overspeed_warning_enabled"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -581,7 +581,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_hide_lane_line_bg_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -842,7 +842,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_cluster_mirror_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -900,7 +900,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_hide_main_when_cluster_active"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -958,7 +958,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_cluster_cross_map_hide_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"

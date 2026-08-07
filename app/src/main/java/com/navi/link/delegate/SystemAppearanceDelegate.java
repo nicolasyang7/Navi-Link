@@ -11,7 +11,7 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import androidx.appcompat.widget.SwitchCompat;
+import com.navi.link.view.SwitchButton;
 import androidx.core.graphics.drawable.DrawableCompat;
 import com.google.android.material.card.MaterialCardView;
 
@@ -34,15 +34,15 @@ public class SystemAppearanceDelegate {
     private SeekBar sbScale, sbClusterScale;
     private TextView tvScaleValue, tvClusterScaleValue;
     
-    private SwitchCompat cbCruiseEnabled;
+    private SwitchButton cbCruiseEnabled;
     private TextView tvCruiseStatus;
     private MaterialCardView cardCruiseToggle;
     
-    private SwitchCompat cbAutoStartEnabled;
+    private SwitchButton cbAutoStartEnabled;
     private TextView tvAutoStartStatus;
     private MaterialCardView cardAutoStartToggle;
     
-    private SwitchCompat cbOverspeedWarningEnabled;
+    private SwitchButton cbOverspeedWarningEnabled;
     private TextView tvOverspeedWarningStatus;
     private MaterialCardView cardOverspeedWarningToggle;
     private LinearLayout llOverspeedThresholdRow;

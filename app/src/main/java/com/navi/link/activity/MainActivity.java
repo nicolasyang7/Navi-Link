@@ -926,6 +926,13 @@ public class MainActivity extends AppCompatActivity {
         switchView.setTrackTintList(new ColorStateList(trackStates, trackColors));
     }
 
+    /** 自定义 SwitchButton 主题色：开启=主题色半透明轨道色，关闭=项目灰，滑块固定白色 */
+    public void updateSwitchTheme(com.navi.link.view.SwitchButton switchView, int color) {
+        if (switchView == null) return;
+        int trackChecked = (color & 0x00FFFFFF) | 0x4D000000;
+        switchView.setColors(trackChecked, 0xFF71717A);
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
