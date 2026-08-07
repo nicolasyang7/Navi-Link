@@ -4,7 +4,7 @@
     android:id="@+id/panel_about_us"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:visibility="gone"
+    android:visibility="visible"
     android:scrollbars="none">
 
     <LinearLayout
@@ -194,18 +194,12 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1" />
                     <TextView
-                        android:text="实时查看导航广播数据"
-                        android:textSize="12sp"
-                        android:textColor="?attr/panelTextColorSecondary"
+                        android:text="点击实时查看导航广播数据"
+                        android:textSize="15sp"
+                        android:textColor="#FF4FC3F7"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=" ›"
-                        android:textSize="18sp"
-                        android:textColor="#FF666666"
-                        android:layout_marginStart="4dp" />
+
                 </LinearLayout>
 
                 <!-- Software Statement -->
