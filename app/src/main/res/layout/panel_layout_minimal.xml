@@ -84,7 +84,7 @@
                                 android:textSize="12sp" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_minimal_autocenter_enabled"
                             android:clickable="false"
                             android:focusable="false"
@@ -142,7 +142,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_minimal_camera_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -200,7 +200,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_minimal_lane_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -258,7 +258,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_minimal_road_name_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -316,7 +316,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_minimal_direction_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -368,7 +368,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_minimal_turn_info_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -426,7 +426,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_minimal_speed_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -484,7 +484,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_minimal_light_count_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -542,7 +542,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_minimal_speed_limit_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"

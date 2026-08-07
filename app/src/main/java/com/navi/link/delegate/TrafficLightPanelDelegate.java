@@ -7,24 +7,24 @@ import com.navi.link.window.FloatingWindowManager;
 import android.graphics.Color;
 import android.widget.RadioButton;
 import android.widget.TextView;
-import androidx.appcompat.widget.SwitchCompat;
+import com.navi.link.view.SwitchButton;
 import com.google.android.material.card.MaterialCardView;
 
 public class TrafficLightPanelDelegate {
     private final MainActivity activity;
 
     private MaterialCardView cardTrafficLightFillToggle;
-    private SwitchCompat cbTrafficLightFillEnabled;
+    private SwitchButton cbTrafficLightFillEnabled;
     private TextView tvTrafficLightFillStatus;
 
     private MaterialCardView[] cardTrafficLightStyle = new MaterialCardView[7];
 
     private MaterialCardView cardTrafficLightCapsuleToggle;
-    private SwitchCompat cbTrafficLightCapsuleEnabled;
+    private SwitchButton cbTrafficLightCapsuleEnabled;
     private TextView tvTrafficLightCapsuleStatus;
 
     private MaterialCardView cardTrafficLightIconToggle;
-    private SwitchCompat cbTrafficLightIconEnabled;
+    private SwitchButton cbTrafficLightIconEnabled;
     private TextView tvTrafficLightIconStatus;
 
     private MaterialCardView cardFontDefault, cardFontOne, cardFontTwo, cardFontThree;

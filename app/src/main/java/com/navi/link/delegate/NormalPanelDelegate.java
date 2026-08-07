@@ -6,34 +6,34 @@ import com.navi.link.window.FloatingWindowManager;
 
 import android.view.View;
 import android.widget.TextView;
-import androidx.appcompat.widget.SwitchCompat;
+import com.navi.link.view.SwitchButton;
 import com.google.android.material.card.MaterialCardView;
 
 public class NormalPanelDelegate {
     private final MainActivity activity;
 
-    private SwitchCompat cbNormalLaneEnabled;
+    private SwitchButton cbNormalLaneEnabled;
     private TextView tvNormalLaneStatus;
     private MaterialCardView cardNormalLaneToggle;
 
-    private SwitchCompat cbHideTurnIconBg;
+    private SwitchButton cbHideTurnIconBg;
     private TextView tvHideTurnIconBgStatus;
     private MaterialCardView cardHideTurnIconBgToggle;
 
     private MaterialCardView cardNormalTmcToggle;
-    private SwitchCompat cbNormalTmcEnabled;
+    private SwitchButton cbNormalTmcEnabled;
     private TextView tvNormalTmcStatus;
 
     private MaterialCardView cardNormalBottomInfoToggle;
-    private SwitchCompat cbNormalBottomInfoEnabled;
+    private SwitchButton cbNormalBottomInfoEnabled;
     private TextView tvNormalBottomInfoStatus;
 
     private MaterialCardView cardNormalCruiseInfoToggle;
-    private SwitchCompat cbNormalCruiseInfoEnabled;
+    private SwitchButton cbNormalCruiseInfoEnabled;
     private TextView tvNormalCruiseInfoStatus;
 
     private MaterialCardView cardHideNormalCruiseSpeedToggle;
-    private SwitchCompat cbHideNormalCruiseSpeedEnabled;
+    private SwitchButton cbHideNormalCruiseSpeedEnabled;
     private TextView tvHideNormalCruiseSpeedStatus;
 
     private TextView tvNormalWidthValue;

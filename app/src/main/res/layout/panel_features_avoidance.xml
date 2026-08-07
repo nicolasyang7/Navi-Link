@@ -641,7 +641,7 @@
 
                         <TextView
                             android:text="›"
-                            android:textSize="20sp"
+                            android:textSize="40sp"
                             android:textColor="#FF4FC3F7"
                             android:paddingStart="8dp"
                             android:layout_width="wrap_content"
@@ -700,7 +700,7 @@
 
                         <TextView
                             android:text="›"
-                            android:textSize="20sp"
+                            android:textSize="40sp"
                             android:textColor="#FF4FC3F7"
                             android:paddingStart="8dp"
                             android:layout_width="wrap_content"
@@ -759,7 +759,7 @@
 
                         <TextView
                             android:text="›"
-                            android:textSize="20sp"
+                            android:textSize="40sp"
                             android:textColor="#FF4FC3F7"
                             android:paddingStart="8dp"
                             android:layout_width="wrap_content"

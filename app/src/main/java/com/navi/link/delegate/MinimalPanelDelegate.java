@@ -5,45 +5,45 @@ import com.navi.link.activity.MainActivity;
 import com.navi.link.window.FloatingWindowManager;
 
 import android.widget.TextView;
-import androidx.appcompat.widget.SwitchCompat;
+import com.navi.link.view.SwitchButton;
 import com.google.android.material.card.MaterialCardView;
 
 public class MinimalPanelDelegate {
     private final MainActivity activity;
 
     private MaterialCardView cardMinimalCameraToggle;
-    private SwitchCompat cbMinimalCameraEnabled;
+    private SwitchButton cbMinimalCameraEnabled;
     private TextView tvMinimalCameraStatus;
 
     private MaterialCardView cardMinimalAutocenterToggle;
-    private SwitchCompat cbMinimalAutocenterEnabled;
+    private SwitchButton cbMinimalAutocenterEnabled;
 
     private MaterialCardView cardMinimalLaneToggle;
-    private SwitchCompat cbMinimalLaneEnabled;
+    private SwitchButton cbMinimalLaneEnabled;
     private TextView tvMinimalLaneStatus;
 
     private MaterialCardView cardMinimalRoadNameToggle;
-    private SwitchCompat cbMinimalRoadNameEnabled;
+    private SwitchButton cbMinimalRoadNameEnabled;
     private TextView tvMinimalRoadNameStatus;
 
     private MaterialCardView cardMinimalDirectionToggle;
-    private SwitchCompat cbMinimalDirectionEnabled;
+    private SwitchButton cbMinimalDirectionEnabled;
     private TextView tvMinimalDirectionStatus;
 
     private MaterialCardView cardMinimalTurnInfoToggle;
-    private SwitchCompat cbMinimalTurnInfoEnabled;
+    private SwitchButton cbMinimalTurnInfoEnabled;
     private TextView tvMinimalTurnInfoStatus;
 
     private MaterialCardView cardMinimalSpeedToggle;
-    private SwitchCompat cbMinimalSpeedEnabled;
+    private SwitchButton cbMinimalSpeedEnabled;
     private TextView tvMinimalSpeedStatus;
 
     private MaterialCardView cardMinimalLightCountToggle;
-    private SwitchCompat cbMinimalLightCountEnabled;
+    private SwitchButton cbMinimalLightCountEnabled;
     private TextView tvMinimalLightCountStatus;
 
     private MaterialCardView cardMinimalSpeedLimitToggle;
-    private SwitchCompat cbMinimalSpeedLimitEnabled;
+    private SwitchButton cbMinimalSpeedLimitEnabled;
     private TextView tvMinimalSpeedLimitStatus;
 
     public MinimalPanelDelegate(MainActivity activity) {

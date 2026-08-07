@@ -84,7 +84,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_traffic_light_fill_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -426,7 +426,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_traffic_light_capsule_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -485,7 +485,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_traffic_light_icon_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"

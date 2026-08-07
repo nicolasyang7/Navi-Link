@@ -85,7 +85,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_normal_lane_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -143,7 +143,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_hide_turn_icon_bg"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -201,7 +201,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_normal_cruise_info_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -259,7 +259,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_hide_normal_cruise_speed_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -317,7 +317,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_normal_tmc_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -375,7 +375,7 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.navi.link.view.SwitchButton
                             android:id="@+id/cb_normal_bottom_info_enabled"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
