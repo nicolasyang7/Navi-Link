@@ -190,6 +190,7 @@ public class FloatingWindowManager {
     private final Runnable naviSwitchRunnable = this::doNaviSwitch;
     private final Runnable naviTimeoutRunnable = this::onNaviTimeout;
     private final Runnable cruiseGraceRunnable = this::onCruiseGrace;
+    private final Runnable dataTimeoutRunnable = this::onDataTimeout;
     private final Runnable trafficLightTimeoutRunnable = this::hideTrafficLightCapsule;
     private final Runnable intervalSpeedTimeoutRunnable = () -> {
         if (activeWindow != null) {
@@ -453,6 +454,7 @@ public class FloatingWindowManager {
         handler.removeCallbacks(naviTimeoutRunnable);
         handler.removeCallbacks(naviSwitchRunnable);
         handler.removeCallbacks(cruiseGraceRunnable);
+        handler.removeCallbacks(dataTimeoutRunnable);
 
         // 2. 立即隐藏视图
         if (floatingView != null) {
@@ -481,6 +483,7 @@ public class FloatingWindowManager {
         handler.removeCallbacks(naviTimeoutRunnable);
         handler.removeCallbacks(naviSwitchRunnable);
         handler.removeCallbacks(cruiseGraceRunnable);
+        handler.removeCallbacks(dataTimeoutRunnable);
 
         // 2. 立即隐藏视图
         if (floatingView != null) {
@@ -541,13 +544,41 @@ public class FloatingWindowManager {
 
     /**
      * 标记收到活动数据。
-     * 不再有看门狗定时隐藏：窗口显示后保持显示，
-     * 直到收到 STATE=9/25（导航/巡航结束）或用户手动关闭才隐藏
+     * 窗口显示后保持显示，直到收到 STATE=9/25（导航/巡航结束）或用户手动关闭才隐藏；
+     * 若用户开启了数据超时看门狗（data_timeout_seconds>0），
+     * 10001 断流超时（如强杀高德）也会触发隐藏兜底。
      */
     public void resetWatchdog() {
         hasActiveData = true;
         hasEverReceivedData = true;
         updateFloatingWindowVisibility();
+    }
+
+    /**
+     * 10001 数据断流看门狗：收到任意 10001（无论 ICON）时重置计时器。
+     * 配置 data_timeout_seconds=0 表示关闭（默认，纯事件驱动）；
+     * >0 表示超过该秒数无任何 10001 数据后自动隐藏窗口（强杀高德无结束广播的兜底）。
+     */
+    public void resetDataWatchdog() {
+        handler.removeCallbacks(dataTimeoutRunnable);
+        SharedPreferences sp = context.getSharedPreferences("floating_config", Context.MODE_PRIVATE);
+        int timeoutSeconds = sp.getInt("data_timeout_seconds", 0);
+        if (timeoutSeconds > 0) {
+            handler.postDelayed(dataTimeoutRunnable, timeoutSeconds * 1000L);
+        }
+    }
+
+    private void onDataTimeout() {
+        // 10001 断流超时：高德被杀/异常退出，未收到 STATE=9/25
+        hasActiveData = false;
+        hasEverReceivedData = false;
+        setOverspeedWarning(false);
+        if (floatingView != null) {
+            floatingView.setVisibility(View.GONE);
+        }
+        if (clusterFloatingView != null) {
+            clusterFloatingView.setVisibility(View.GONE);
+        }
     }
 
     public boolean hasEverReceivedData() {

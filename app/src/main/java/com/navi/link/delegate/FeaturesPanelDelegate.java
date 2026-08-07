@@ -7,6 +7,7 @@ import com.navi.link.window.FloatingWindowManager;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.display.DisplayManager;
 import android.view.Display;
 import android.view.View;
@@ -58,6 +59,9 @@ public class FeaturesPanelDelegate {
     private TextView tvClickActionStatus;
     private MaterialCardView cardDoubleClickAction;
     private TextView tvDoubleClickActionStatus;
+
+    private MaterialCardView cardDataTimeout;
+    private TextView tvDataTimeoutStatus;
 
     public FeaturesPanelDelegate(MainActivity activity) {
         this.activity = activity;
@@ -250,6 +254,12 @@ public class FeaturesPanelDelegate {
         if (cardDoubleClickAction != null) {
             cardDoubleClickAction.setOnClickListener(v -> showClickActionDialog(true));
         }
+
+        cardDataTimeout = activity.findViewById(R.id.card_data_timeout);
+        tvDataTimeoutStatus = activity.findViewById(R.id.tv_data_timeout_status);
+        if (cardDataTimeout != null) {
+            cardDataTimeout.setOnClickListener(v -> showDataTimeoutDialog());
+        }
     }
 
     /** 单击/双击行为设置弹窗 */
@@ -306,6 +316,54 @@ public class FeaturesPanelDelegate {
                 tvDoubleClickActionStatus.setText("双击打开设置页");
             }
         }
+    }
+
+    /** 数据超时隐藏窗口设置弹窗：自定义秒数，0=关闭 */
+    private void showDataTimeoutDialog() {
+        final SharedPreferences sp = activity.getSharedPreferences("floating_config", Context.MODE_PRIVATE);
+        final int current = sp.getInt("data_timeout_seconds", 0);
+        final android.widget.EditText input = new android.widget.EditText(activity);
+        input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+        input.setHint("输入秒数，0 或留空 = 关闭");
+        if (current > 0) {
+            input.setText(String.valueOf(current));
+            input.setSelection(input.getText().length());
+        }
+        int pad = Math.round(16 * activity.getResources().getDisplayMetrics().density);
+        android.widget.LinearLayout container = new android.widget.LinearLayout(activity);
+        container.setOrientation(android.widget.LinearLayout.VERTICAL);
+        container.setPadding(pad, 0, pad, 0);
+        container.addView(input);
+        new android.app.AlertDialog.Builder(activity)
+                .setTitle("数据超时隐藏窗口")
+                .setMessage("无导航/巡航数据（10001广播）超过该秒数后自动隐藏窗口，用于高德被强杀等无结束广播的场景。")
+                .setView(container)
+                .setNegativeButton("关闭", (d, w) -> {
+                    sp.edit().putInt("data_timeout_seconds", 0).apply();
+                    updateDataTimeoutStatusText();
+                })
+                .setPositiveButton("确定", (d, w) -> {
+                    String text = input.getText().toString().trim();
+                    int seconds = 0;
+                    if (!text.isEmpty()) {
+                        try {
+                            seconds = Integer.parseInt(text);
+                        } catch (NumberFormatException ignored) {
+                        }
+                    }
+                    if (seconds < 0) seconds = 0;
+                    if (seconds > 9999) seconds = 9999;
+                    sp.edit().putInt("data_timeout_seconds", seconds).apply();
+                    updateDataTimeoutStatusText();
+                })
+                .show();
+    }
+
+    private void updateDataTimeoutStatusText() {
+        if (tvDataTimeoutStatus == null) return;
+        SharedPreferences sp = activity.getSharedPreferences("floating_config", Context.MODE_PRIVATE);
+        int seconds = sp.getInt("data_timeout_seconds", 0);
+        tvDataTimeoutStatus.setText(seconds > 0 ? "无数据 " + seconds + " 秒后隐藏窗口" : "关闭（默认）");
     }
 
     public void showClusterDisplaySelectionDialog() {
@@ -387,6 +445,7 @@ public class FeaturesPanelDelegate {
         }
 
         updateClickActionStatusTexts();
+        updateDataTimeoutStatusText();
     }
 
     public void updateThemeColors() {

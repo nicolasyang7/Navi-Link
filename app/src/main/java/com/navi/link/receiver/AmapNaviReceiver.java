@@ -1,13 +1,5 @@
 package com.navi.link.receiver;
-import com.navi.link.R;
-import com.navi.link.BuildConfig;
-import com.navi.link.activity.*;
-import com.navi.link.delegate.*;
 import com.navi.link.window.*;
-import com.navi.link.view.*;
-import com.navi.link.receiver.*;
-import com.navi.link.service.*;
-import com.navi.link.utils.*;
 
 
 import android.content.BroadcastReceiver;
@@ -121,6 +113,8 @@ public class AmapNaviReceiver extends BroadcastReceiver {
                 return;
             }
             manager.resetWatchdog();
+            // 数据断流看门狗：任何 10001（无论 ICON）都视为高德存活心跳
+            manager.resetDataWatchdog();
 
             int icon = getIntSafe(intent, "NEW_ICON", 0);
             if (icon == 0) {
@@ -222,7 +216,7 @@ public class AmapNaviReceiver extends BroadcastReceiver {
         int remainLightNum = getIntSafe(intent, "routeRemainTrafficLightNum", 0);
         int carDirection = getIntSafe(intent, "CAR_DIRECTION", -1);
 
-        manager.updateNaviInfo(icon, disNum, disUnit, "进入", roadName,
+        manager.updateNaviInfo(icon, disNum, disUnit, "进", roadName,
                 summaryStr, eta, progressPercentage, curSpeed,
                 limitedSpeed, cameraType, cameraDist, cameraSpeed,
                 endPoiName, totalLightNum, remainLightNum, curRoadName, carDirection);
