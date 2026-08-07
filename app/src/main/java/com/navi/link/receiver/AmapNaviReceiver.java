@@ -13,6 +13,35 @@ public class AmapNaviReceiver extends BroadcastReceiver {
 
     private static final String TAG = "AmapNavi";
     private boolean isLog = true;
+
+    // ===== 广播调试 =====
+    // 白名单：仅展示代码实际用到的字段（handleNaviInfo/handleCruiseInfo/handleTrafficLight/updateLaneLines）
+    private static final String[] FIELDS_10001 = {
+            "NEW_ICON", "ICON", "SEG_REMAIN_DIS_AUTO", "ROUTE_REMAIN_DIS_AUTO", "ROUTE_REMAIN_TIME_AUTO",
+            "ETA_TEXT", "NEXT_ROAD_NAME", "CUR_ROAD_NAME", "ROUTE_REMAIN_DIS", "ROUTE_ALL_DIS",
+            "CUR_SPEED", "LIMITED_SPEED", "CAMERA_DIST", "CAMERA_SPEED", "CAMERA_TYPE", "endPOIName",
+            "TRAFFIC_LIGHT_NUM", "routeRemainTrafficLightNum", "CAR_DIRECTION",
+            "EXIT_NAME_INFO", "EXIT_DIRECTION_INFO",
+            "SAPA_NAME", "SAPA_DIST_AUTO", "SAPA_TYPE", "NEXT_SAPA_NAME", "NEXT_SAPA_DIST_AUTO", "NEXT_SAPA_TYPE"
+    };
+    private static final String[] FIELDS_60073 = {
+            "trafficLightStatus", "dir", "redLightCountDownSeconds", "lightsData"
+    };
+    private static final String[] FIELDS_13012 = {
+            "EXTRA_DRIVE_WAY"
+    };
+
+    /** 广播调试监听：页面打开时注册，收到白名单字段后回调（主线程） */
+    public interface BroadcastDebugListener {
+        void onBroadcastData(int keyType, java.util.Map<String, String> fields);
+    }
+
+    private static volatile BroadcastDebugListener sDebugListener;
+
+    public static void setBroadcastDebugListener(BroadcastDebugListener listener) {
+        sDebugListener = listener;
+    }
+
     @Override
     public void onReceive(Context context, Intent intent) {
         if (!"AUTONAVI_STANDARD_BROADCAST_SEND".equals(intent.getAction())) return;
@@ -21,6 +50,9 @@ public class AmapNaviReceiver extends BroadcastReceiver {
         if (manager == null) return;
 
         int keyType = intent.getIntExtra("KEY_TYPE", 0);
+
+        // 转发白名单字段给调试页面（页面未打开时零开销）
+        forwardDebug(keyType, intent);
 
 
         Bundle extras = intent.getExtras();
@@ -261,5 +293,33 @@ public class AmapNaviReceiver extends BroadcastReceiver {
             } catch (Exception ignored) {}
         }
         return defaultValue;
+    }
+
+    /** 按白名单提取字段并转发给调试页面 */
+    private void forwardDebug(int keyType, Intent intent) {
+        BroadcastDebugListener listener = sDebugListener;
+        if (listener == null) return;
+        String[] whitelist;
+        if (keyType == 10001) {
+            whitelist = FIELDS_10001;
+        } else if (keyType == 60073) {
+            whitelist = FIELDS_60073;
+        } else if (keyType == 13012) {
+            whitelist = FIELDS_13012;
+        } else {
+            return;
+        }
+        Bundle extras = intent.getExtras();
+        if (extras == null) return;
+        java.util.Map<String, String> fields = new java.util.HashMap<>();
+        for (String key : whitelist) {
+            if (extras.containsKey(key)) {
+                Object v = extras.get(key);
+                fields.put(key, v == null ? "null" : v.toString());
+            }
+        }
+        if (!fields.isEmpty()) {
+            listener.onBroadcastData(keyType, fields);
+        }
     }
 }

@@ -74,6 +74,12 @@ public class AboutUsPanelDelegate {
                 }
             });
         }
+
+        // 广播调试入口：全屏实时显示 10001/60073/13012 白名单字段
+        View llBroadcastDebug = activity.findViewById(R.id.ll_about_broadcast_debug);
+        if (llBroadcastDebug != null) {
+            llBroadcastDebug.setOnClickListener(v -> new BroadcastDebugDialog(activity).show());
+        }
     }
 
     public void loadSettings() {

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:background="#FF14171C"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 顶部栏 -->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:text="广播调试"
+            android:textSize="17sp"
+            android:textColor="#FFFFFFFF"
+            android:textStyle="bold"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/btn_bcast_clear"
+            android:text="清空"
+            android:textSize="14sp"
+            android:textColor="#FF4FC3F7"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/btn_bcast_close"
+            android:text="关闭"
+            android:textSize="14sp"
+            android:textColor="#FFFF6B6B"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <!-- 过滤行 -->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/chip_bcast_all"
+            android:text="全部"
+            android:textSize="13sp"
+            android:textColor="#FF14171C"
+            android:background="@drawable/bg_bcast_chip_selected"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="6dp"
+            android:layout_marginEnd="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/chip_bcast_10001"
+            android:text="10001"
+            android:textSize="13sp"
+            android:textColor="#FFC9D1D9"
+            android:background="@drawable/bg_bcast_chip"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="6dp"
+            android:layout_marginEnd="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/chip_bcast_60073"
+            android:text="60073"
+            android:textSize="13sp"
+            android:textColor="#FFC9D1D9"
+            android:background="@drawable/bg_bcast_chip"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="6dp"
+            android:layout_marginEnd="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/chip_bcast_13012"
+            android:text="13012"
+            android:textSize="13sp"
+            android:textColor="#FFC9D1D9"
+            android:background="@drawable/bg_bcast_chip"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="6dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#FF2A2F38" />
+
+    <!-- 实时滚动区 -->
+    <ScrollView
+        android:id="@+id/scroll_bcast_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scrollbars="vertical"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:id="@+id/ll_bcast_container"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </ScrollView>
+</LinearLayout>
