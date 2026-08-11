@@ -517,6 +517,7 @@ public class MainActivity extends AppCompatActivity {
         if (btnHome != null) {
             btnHome.setOnClickListener(v -> moveTaskToBack(true));
         }
+
         View btnExit = findViewById(R.id.btn_exit_app);
         if (btnExit != null) {
             btnExit.setOnClickListener(v -> {

@@ -107,19 +107,89 @@ public abstract class BaseFloatingWindow {
         }
     }
 
+    public static class EtaInfo {
+        public final String time;
+        public final int dayOffset;
+
+        public EtaInfo(String time, int dayOffset) {
+            this.time = time;
+            this.dayOffset = dayOffset;
+        }
+    }
+
+    public static EtaInfo parseEta(String etaText) {
+        if (etaText == null || etaText.isEmpty()) {
+            return new EtaInfo("", 0);
+        }
+
+        // 1. 正则提取时间 (如 "18:06")
+        String time = "";
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\\d{1,2}:\\d{2}").matcher(etaText);
+        if (matcher.find()) {
+            time = matcher.group();
+        } else {
+            return new EtaInfo(etaText.replace("预计", "").replace("到达", "").replace("到", "").trim(), 0);
+        }
+
+        // 2. 匹配跨天天数
+        int dayOffset = 0;
+        if (etaText.contains("明天") || etaText.contains("次日")) {
+            dayOffset = 1;
+        } else if (etaText.contains("后天")) {
+            dayOffset = 2;
+        } else if (etaText.contains("周") || etaText.contains("星期")) {
+            int targetDay = getDayOfWeekNum(etaText);
+            if (targetDay > 0) {
+                java.util.Calendar cal = java.util.Calendar.getInstance();
+                int currentDayOfWeek = cal.get(java.util.Calendar.DAY_OF_WEEK);
+                int currentDay = (currentDayOfWeek == java.util.Calendar.SUNDAY) ? 7 : (currentDayOfWeek - 1);
+                dayOffset = targetDay - currentDay;
+                if (dayOffset < 0) {
+                    dayOffset += 7;
+                }
+            }
+        }
+
+        return new EtaInfo(time, dayOffset);
+    }
+
+    private static int getDayOfWeekNum(String text) {
+        if (text.contains("一")) return 1;
+        if (text.contains("二")) return 2;
+        if (text.contains("三")) return 3;
+        if (text.contains("四")) return 4;
+        if (text.contains("五")) return 5;
+        if (text.contains("六")) return 6;
+        if (text.contains("日") || text.contains("天")) return 7;
+        return 0;
+    }
+
+    protected CharSequence formatEtaSpannable(String etaText) {
+        if (etaText == null || etaText.isEmpty()) return "";
+        EtaInfo etaInfo = parseEta(etaText);
+        if (etaInfo.dayOffset > 0) {
+            String offsetStr = "+" + etaInfo.dayOffset;
+            String rawText = etaInfo.time + offsetStr + "到";
+            android.text.SpannableString spannable = new android.text.SpannableString(rawText);
+            int start = etaInfo.time.length();
+            int end = start + offsetStr.length();
+            spannable.setSpan(new android.text.style.SuperscriptSpan(), start, end, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannable.setSpan(new android.text.style.RelativeSizeSpan(0.6f), start, end, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            return spannable;
+        } else {
+            String text = etaInfo.time;
+            if (text.isEmpty()) {
+                text = etaText.replace("预计", "").replace("到达", "").trim();
+            }
+            if (!text.isEmpty() && !text.endsWith("到")) {
+                text = text + "到";
+            }
+            return text;
+        }
+    }
+
     protected String formatEta(String eta) {
-        if (eta == null || eta.isEmpty()) return "";
-        String result = eta;
-        if (result.startsWith("预计")) {
-            result = result.substring(2);
-        }
-        if (result.endsWith("到达")) {
-            result = result.substring(0, result.length() - 2) + "到";
-        }
-        result = result.replace("明天", "明");
-        result = result.replace("后天", "后");
-        result = result.replace("大后天", "大后");
-        return result;
+        return formatEtaSpannable(eta).toString();
     }
 
     protected String getDirectionText(int degrees) {

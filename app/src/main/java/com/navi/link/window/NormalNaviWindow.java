@@ -187,7 +187,7 @@ public class NormalNaviWindow extends BaseFloatingWindow {
             tvSummary.setText(summaryStr);
         }
         if (tvEta != null) {
-            tvEta.setText(formatEta(eta));
+            tvEta.setText(formatEtaSpannable(eta));
         }
         if (tvNaviLightCount != null) {
             if (remainLightNum > 0) {

@@ -218,7 +218,7 @@ public class FullNaviWindow extends BaseFloatingWindow {
         }
 
         if (tvEtaFull != null) {
-            tvEtaFull.setText(formatEta(eta));
+            tvEtaFull.setText(formatEtaSpannable(eta));
         }
 
         if (tvFullCameraDist != null) {
