@@ -1,0 +1,47 @@
+# Navi-Link 云端自动打包配置
+# 用法：
+#   1. fork 这个仓库到自己的 GitHub 账号
+#   2. 把本文件上传到仓库 .github/workflows/build.yml
+#   3. 到仓库 Actions 页面手动触发 "Build Navi-Link APK"
+#   4. 构建完成后在 Actions 运行记录的 Artifacts 里下载 APK
+# 说明：
+#   - 不配签名信息也能构建成功（产物为未签名 APK，下载后用 uber-apk-signer 本地签一次即可）
+#   - 想每次构建自动签名：把 keystore 文件、密码配成 GitHub Secrets
+#     (NAVI_STORE_FILE / NAVI_STORE_PASSWORD / NAVI_KEY_ALIAS / NAVI_KEY_PASSWORD)
+name: Build Navi-Link APK
+
+on:
+  workflow_dispatch:            # 手动触发（推荐，改完代码后点一下 Run workflow）
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build release APK
+        run: ./gradlew assembleRelease
+        env:
+          # 若配置了 Secrets，这里会自动读取；没配就跳过签名，构建照常成功
+          NAVI_STORE_FILE: ${{ secrets.NAVI_STORE_FILE }}
+          NAVI_STORE_PASSWORD: ${{ secrets.NAVI_STORE_PASSWORD }}
+          NAVI_KEY_ALIAS: ${{ secrets.NAVI_KEY_ALIAS }}
+          NAVI_KEY_PASSWORD: ${{ secrets.NAVI_KEY_PASSWORD }}
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Navi-Link-APK
+          path: app/build/outputs/apk/release/*.apk
