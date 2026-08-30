@@ -206,8 +206,8 @@ public class SystemAppearanceDelegate {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                     if (fromUser) {
-                        float scale = 0.5f + (progress / 15.0f) * 1.5f;
-                        if (tvScaleValue != null) tvScaleValue.setText(String.format("%.1fx", scale));
+                        float scale = 0.25f + (progress / 15.0f) * 1.75f;
+                        if (tvScaleValue != null) tvScaleValue.setText(String.format("%.2fx", scale));
                         FloatingWindowManager manager = FloatingWindowManager.getInstance();
                         if (manager != null) {
                             manager.updateScale(scale);
@@ -224,9 +224,9 @@ public class SystemAppearanceDelegate {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                     if (fromUser) {
-                        float scale = 0.5f + (progress / 15.0f) * 1.5f;
+                        float scale = 0.25f + (progress / 15.0f) * 1.75f;
                         if (tvClusterScaleValue != null) {
-                            tvClusterScaleValue.setText(String.format("%.1fx", scale));
+                            tvClusterScaleValue.setText(String.format("%.2fx", scale));
                         }
                         FloatingWindowManager manager = FloatingWindowManager.getInstance();
                         if (manager != null) {
@@ -338,21 +338,21 @@ public class SystemAppearanceDelegate {
     public void updateSeekBarToCurrentScale() {
         FloatingWindowManager manager = FloatingWindowManager.getInstance();
         float currentScale = (manager != null) ? manager.getScale() : 1.0f;
-        int progress = Math.round(((currentScale - 0.5f) / 1.5f) * 15.0f);
+        int progress = Math.round(((currentScale - 0.25f) / 1.75f) * 15.0f);
         if (progress < 0) progress = 0;
         if (progress > 15) progress = 15;
         if (sbScale != null) sbScale.setProgress(progress);
-        if (tvScaleValue != null) tvScaleValue.setText(String.format("%.1fx", currentScale));
+        if (tvScaleValue != null) tvScaleValue.setText(String.format("%.2fx", currentScale));
 
         float clusterScale = (manager != null) ? manager.getClusterScale() : 1.0f;
-        int progressCluster = Math.round(((clusterScale - 0.5f) / 1.5f) * 15.0f);
+        int progressCluster = Math.round(((clusterScale - 0.25f) / 1.75f) * 15.0f);
         if (progressCluster < 0) progressCluster = 0;
         if (progressCluster > 15) progressCluster = 15;
         if (sbClusterScale != null) {
             sbClusterScale.setProgress(progressCluster);
         }
         if (tvClusterScaleValue != null) {
-            tvClusterScaleValue.setText(String.format("%.1fx", clusterScale));
+            tvClusterScaleValue.setText(String.format("%.2fx", clusterScale));
         }
     }
     
