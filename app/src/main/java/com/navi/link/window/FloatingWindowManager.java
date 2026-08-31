@@ -9,7 +9,7 @@ import com.navi.link.receiver.*;
 import com.navi.link.service.*;
 import com.navi.link.utils.*;
 import java.util.ArrayList;
-
+import java.util.List;
 
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
