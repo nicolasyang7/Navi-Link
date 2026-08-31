@@ -128,7 +128,7 @@ public class CustomDisplayWindow extends BaseFloatingWindow {
     private void addModuleInstance(ModuleConfig cfg) {
         CustomLog.d("[副屏窗口] 实例化模块: " + cfg.moduleId + " 实例=" + cfg.instanceId + " scale=" + cfg.scale + " pos=(" + Math.round(cfg.x) + "," + Math.round(cfg.y) + ")");
         ScalableModuleContainer mc = new ScalableModuleContainer(context, cfg);
-        mc.setOnConfigChangeListener(conf -> saveConfigs());
+        mc.setOnConfigChangeListener(conf -> scheduleSave());
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 FrameLayout.LayoutParams.WRAP_CONTENT);
