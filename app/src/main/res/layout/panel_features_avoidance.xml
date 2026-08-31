@@ -1017,6 +1017,25 @@
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
 
+                        <!-- [MOD-BEGIN] 副屏模块自定义系统：模块调整入口按钮 -->
+                        <TextView
+                            android:id="@+id/btn_adjust_cluster_modules"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:gravity="center"
+                            android:paddingLeft="12dp"
+                            android:paddingRight="12dp"
+                            android:paddingTop="6dp"
+                            android:paddingBottom="6dp"
+                            android:text="模块"
+                            android:textColor="#FF4FC3F7"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:visibility="gone" />
+                        <!-- [MOD-END] 副屏模块自定义系统 -->
+
                         <TextView
                             android:id="@+id/btn_adjust_cluster_pos"
                             android:layout_width="wrap_content"

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F2F2F7"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <TextView
+            android:text="副屏模块调整"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A1A"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:text="点击下方模块即可添加至副屏（同一模块可重复添加，每个都是独立实例）。添加后到副屏上拖动调整位置，用右下角 ＋/− 按钮缩放（0.25X ~ 3.0X）。"
+            android:textSize="13sp"
+            android:textColor="#666666"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:id="@+id/tv_module_selector_title"
+            android:text="可用模块"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A1A"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/ll_module_selector"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp" />
+
+        <TextView
+            android:id="@+id/tv_current_hint"
+            android:text="当前副屏未添加任何模块"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A1A"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/ll_current_modules"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+</ScrollView>

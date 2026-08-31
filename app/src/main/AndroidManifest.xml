@@ -38,9 +38,16 @@
             android:theme="@style/Theme.NaviLink"
             android:exported="true"
             android:launchMode="singleTop" />
+        <!-- [MOD-END] 副屏模块自定义系统 -->
 
         <activity
             android:name=".activity.ClusterPositionActivity"
+            android:exported="false"
+            android:theme="@style/Theme.NaviLink"
+            android:launchMode="singleTop" />
+
+        <activity
+            android:name=".activity.DisplayAdjustActivity"
             android:exported="false"
             android:theme="@style/Theme.NaviLink"
             android:launchMode="singleTop" />

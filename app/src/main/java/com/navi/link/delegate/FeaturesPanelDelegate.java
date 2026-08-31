@@ -3,6 +3,8 @@ package com.navi.link.delegate;
 import com.navi.link.R;
 import com.navi.link.activity.MainActivity;
 import com.navi.link.activity.ClusterPositionActivity;
+// [MOD-BEGIN] 副屏模块自定义系统
+import com.navi.link.activity.DisplayAdjustActivity;
 import com.navi.link.window.FloatingWindowManager;
 
 import android.content.Context;
@@ -46,6 +48,9 @@ public class FeaturesPanelDelegate {
     private TextView tvClusterDisplaySelectStatus;
     private TextView tvClusterDisplaySelectLabel;
     private TextView btnAdjustClusterPos;
+    // [MOD-BEGIN] 副屏模块自定义系统：字段
+    private TextView btnAdjustClusterModules;
+    // [MOD-END]
 
     private MaterialCardView cardHideMainWhenClusterActive;
     private SwitchButton cbHideMainWhenClusterActive;
@@ -92,6 +97,9 @@ public class FeaturesPanelDelegate {
         tvClusterDisplaySelectStatus = activity.findViewById(R.id.tv_cluster_display_select_status);
         tvClusterDisplaySelectLabel = activity.findViewById(R.id.tv_cluster_display_select_label);
         btnAdjustClusterPos = activity.findViewById(R.id.btn_adjust_cluster_pos);
+        // [MOD-BEGIN] 副屏模块自定义系统：初始化
+        btnAdjustClusterModules = activity.findViewById(R.id.btn_adjust_cluster_modules);
+        // [MOD-END]
 
         cardHideMainWhenClusterActive = activity.findViewById(R.id.card_hide_main_when_cluster_active);
         cbHideMainWhenClusterActive = activity.findViewById(R.id.cb_hide_main_when_cluster_active);
@@ -174,7 +182,8 @@ public class FeaturesPanelDelegate {
                 if (tvClusterMirrorStatus != null) {
                     tvClusterMirrorStatus.setText(isChecked ? "仪表盘/副屏镜像已开启" : "未开启仪表盘/副屏镜像");
                 }
-                if (btnAdjustClusterPos != null) {
+                // [MOD-END] 副屏模块调整入口（下方为官方原有调位按钮逻辑）
+        if (btnAdjustClusterPos != null) {
                     btnAdjustClusterPos.setVisibility(isChecked ? View.VISIBLE : View.GONE);
                 }
                 FloatingWindowManager fwm = FloatingWindowManager.getInstance();
@@ -239,6 +248,14 @@ public class FeaturesPanelDelegate {
                     return;
                 }
                 Intent intent = new Intent(activity, ClusterPositionActivity.class);
+                activity.startActivity(intent);
+            });
+        }
+
+        if (btnAdjustClusterModules != null) {
+            // [MOD-BEGIN] 副屏模块调整入口
+            btnAdjustClusterModules.setOnClickListener(v -> {
+                Intent intent = new Intent(activity, DisplayAdjustActivity.class);
                 activity.startActivity(intent);
             });
         }
@@ -426,6 +443,9 @@ public class FeaturesPanelDelegate {
         }
         if (btnAdjustClusterPos != null) {
             btnAdjustClusterPos.setVisibility(activity.clusterMirrorEnabled ? View.VISIBLE : View.GONE);
+        }
+        if (btnAdjustClusterModules != null) {
+            btnAdjustClusterModules.setVisibility(activity.clusterMirrorEnabled ? View.VISIBLE : View.GONE);
         }
 
         if (cbHideMainWhenClusterActive != null) cbHideMainWhenClusterActive.setChecked(activity.hideMainWhenClusterActive);
