@@ -146,6 +146,20 @@ public class CustomDisplayWindow extends BaseFloatingWindow {
     }
     // =====[MOD-END]=====
 
+    // =====[MOD-BEGIN]副屏模块自定义系统：清空所有模块=====
+    /** 清空副屏全部模块（配合调整页"清空所有模块"按钮） */
+    public void removeAllModules() {
+        for (ScalableModuleContainer mc : modules) {
+            moduleContainer.removeView(mc);
+            mc.setOnConfigChangeListener(null);
+            mc.removeAllViews();
+        }
+        modules.clear();
+        scheduleSave();
+        CustomLog.d("[副屏窗口]清空所有模块");
+    }
+    // =====[MOD-END]=====
+
     private void addModuleInstance(ModuleConfig cfg) {
         try {
             CustomLog.d("[副屏窗口] 实例化模块: " + cfg.moduleId + " 实例=" + cfg.instanceId + " scale=" + cfg.scale + " pos=(" + Math.round(cfg.x) + "," + Math.round(cfg.y) + ")");

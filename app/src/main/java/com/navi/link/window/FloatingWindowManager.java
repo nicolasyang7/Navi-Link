@@ -371,6 +371,16 @@ public class FloatingWindowManager {
     // =====[MOD-END]=====
 
     /** 副屏移除一个自定义模块实例 */
+    // =====[MOD-BEGIN]副屏模块自定义系统：清空所有模块=====
+    public void removeAllCustomModules() {
+        if (clusterActiveWindow instanceof CustomDisplayWindow) {
+            ((CustomDisplayWindow) clusterActiveWindow).removeAllModules();
+        } else {
+            ModuleConfig.saveAll(context, new ArrayList<ModuleConfig>());
+        }
+        CustomLog.d("[管理] removeAllCustomModules");
+    }
+    // =====[MOD-END]=====
     public void removeCustomModule(String instanceId) {
         CustomLog.d("[管理] removeCustomModule: " + instanceId + " (副屏激活=" + (clusterActiveWindow instanceof CustomDisplayWindow) + ")");
         if (clusterActiveWindow instanceof CustomDisplayWindow) {

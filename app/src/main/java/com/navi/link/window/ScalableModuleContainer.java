@@ -42,6 +42,15 @@ public class ScalableModuleContainer extends FrameLayout {
     private float startX = 0f;
     private float startY = 0f;
     private boolean dragging = false;
+    // =====[MOD-BEGIN]副屏模块自定义系统：模拟屏拖动边界=====
+    private float dragBoundW = -1f;
+    private float dragBoundH = -1f;
+
+    public void setDragBounds(float w, float h) {
+        dragBoundW = w;
+        dragBoundH = h;
+    }
+    // =====[MOD-END]=====
     private boolean touchOnBar = false;
     private int themeColor = 0;
 
@@ -212,15 +221,13 @@ public class ScalableModuleContainer extends FrameLayout {
                     if (dragging) {
                         float newX = startX + dx;
                         float newY = startY + dy;
-                        // 边界限制：按实际显示尺寸（原始尺寸 × 缩放因子）限制在屏幕内，
-                        // 避免模块放大（如 3X）后右/下边缘超出屏幕
-                        // Math.max(...,1) 防止布局未完成时 getWidth()=0 导致边界限制失效
+                        // 边界限制：优先限定在 setDragBounds 指定的区域（如模拟屏），否则用屏幕
                         float actualW = Math.max(getWidth(), 1) * config.scale;
                         float actualH = Math.max(getHeight(), 1) * config.scale;
-                        int screenW = getResources().getDisplayMetrics().widthPixels;
-                        int screenH = getResources().getDisplayMetrics().heightPixels;
-                        newX = Math.max(0, Math.min(newX, screenW - actualW));
-                        newY = Math.max(0, Math.min(newY, screenH - actualH));
+                        float limitW = dragBoundW > 0 ? dragBoundW : getResources().getDisplayMetrics().widthPixels;
+                        float limitH = dragBoundH > 0 ? dragBoundH : getResources().getDisplayMetrics().heightPixels;
+                        newX = Math.max(0, Math.min(newX, limitW - actualW));
+                        newY = Math.max(0, Math.min(newY, limitH - actualH));
                         setX(newX);
                         setY(newY);
                         config.x = getX();

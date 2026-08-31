@@ -1,497 +1,294 @@
 package com.navi.link.activity;
-import com.navi.link.R;
-import com.navi.link.BuildConfig;
-import com.navi.link.activity.*;
-import com.navi.link.delegate.*;
-import com.navi.link.window.*;
-import com.navi.link.view.*;
-import com.navi.link.receiver.*;
-import com.navi.link.service.*;
-import com.navi.link.utils.*;
 
-
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
-import android.view.MotionEvent;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
-import com.google.android.material.button.MaterialButton;
+import com.navi.link.R;
+import com.navi.link.utils.CustomLog;
+import com.navi.link.window.FloatingWindowManager;
+import com.navi.link.window.ModuleConfig;
+import com.navi.link.window.ModuleRegistry;
+import com.navi.link.window.ScalableModuleContainer;
 
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 副屏投屏位置调整 + 模块管理（合并页面）
+ * 左侧：可用模块列表（点击添加，可重复）
+ * 右侧：模拟副屏（模块方块 = 复用 ScalableModuleContainer，可拖动/缩放/长按删除）
+ * 底部：D-Pad 窗口调位 + 保存并退出
+ * 映射与官方 refreshIndicator 同一套公式：窗口位置 currentPos/屏幕尺寸×模拟屏尺寸
+ */
 public class ClusterPositionActivity extends AppCompatActivity {
 
-    private TextView tvTitle;
+    private FrameLayout mockScreen;
+    private LinearLayout moduleList;
     private TextView tvPosInfo;
-    private FrameLayout trackpad;
-    private FrameLayout indicator;
+    private List<ModuleConfig> moduleConfigs = new ArrayList<>();
 
-    private View btnCenter;
-    private View btnUp;
-    private View btnDown;
-    private View btnLeft;
-    private View btnRight;
-    private MaterialButton btnDone;
-    // =====[MOD-BEGIN]副屏模块自定义系统=====
-    private MaterialButton btnModules;
+    private FloatingWindowManager fwm;
+    private int moduleScreenW = 1920;
+    private int moduleScreenH = 720;
     private int moduleWindowW = 480;
     private int moduleWindowH = 360;
-    private final java.util.List<android.view.View> moduleHandles = new java.util.ArrayList<>();
-    // =====[MOD-END]=====
-
-    private int themeColor = 0xFF4FC3F7;
-    private int accentColor = 0xFF4FC3F7;
+    private int[] currentPos = new int[]{0, 0};
+    private boolean positionLoaded = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_cluster_position);
 
-        android.view.ViewGroup contentView = findViewById(android.R.id.content);
-        View root = contentView.getChildAt(0);
-        if (root != null) {
-            final int paddingLeft = root.getPaddingLeft();
-            final int paddingTop = root.getPaddingTop();
-            final int paddingRight = root.getPaddingRight();
-            final int paddingBottom = root.getPaddingBottom();
-            ViewCompat.setOnApplyWindowInsetsListener(root, (view, windowInsetsCompat) -> {
-                Insets insets = windowInsetsCompat.getInsets(WindowInsetsCompat.Type.systemBars());
-                view.setPadding(
-                        insets.left + paddingLeft,
-                        insets.top + paddingTop,
-                        insets.right + paddingRight,
-                        insets.bottom + paddingBottom
-                );
-                return windowInsetsCompat;
-            });
-        }
-
-        androidx.core.view.WindowInsetsControllerCompat windowInsetsController =
-                androidx.core.view.WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
-        if (windowInsetsController != null) {
-            windowInsetsController.setAppearanceLightStatusBars(false);
-        }
-
-        FloatingWindowManager fwm = FloatingWindowManager.getInstance();
-        if (fwm == null || !fwm.isClusterMirrorActive()) {
-            Toast.makeText(this, "副屏投屏未开启，请先开启投屏", Toast.LENGTH_SHORT).show();
+        fwm = FloatingWindowManager.getInstance();
+        if (fwm == null) {
             finish();
             return;
         }
 
-        // 读取主题色
-        SharedPreferences sp = getSharedPreferences("floating_config", MODE_PRIVATE);
-        themeColor = sp.getInt("theme_color", 0xFF4FC3F7);
-        accentColor = isDarkColor(themeColor) ? Color.WHITE : themeColor;
+        mockScreen = findViewById(R.id.mock_screen);
+        moduleList = findViewById(R.id.module_list);
+        tvPosInfo = findViewById(R.id.tv_pos_info);
 
-        // 绑定视图
-        tvTitle = findViewById(R.id.tv_dialog_title);
-        tvPosInfo = findViewById(R.id.tv_cluster_pos_info);
-        trackpad = findViewById(R.id.cluster_trackpad);
-        indicator = findViewById(R.id.cluster_trackpad_indicator);
-
-        btnCenter = findViewById(R.id.btn_pos_center);
-        btnUp = findViewById(R.id.btn_pos_up);
-        btnDown = findViewById(R.id.btn_pos_down);
-        btnLeft = findViewById(R.id.btn_pos_left);
-        btnRight = findViewById(R.id.btn_pos_right);
-        btnDone = findViewById(R.id.btn_pos_done);
-
-        // 动态应用主题色与样式
-        if (tvTitle != null) {
-            tvTitle.setTextColor(accentColor);
-        }
-        if (btnDone != null) {
-            btnDone.setBackgroundTintList(ColorStateList.valueOf(accentColor));
-            btnDone.setOnClickListener(v -> finish());
-        }
-
-        // =====[MOD-BEGIN]副屏模块自定义系统：模块调整入口=====
-        btnModules = findViewById(R.id.btn_pos_modules);
-        if (btnModules != null) {
-            btnModules.setBackgroundTintList(ColorStateList.valueOf(0xFF3A3A3C));
-            btnModules.setOnClickListener(v -> {
-                Intent intent = new Intent(this, DisplayAdjustActivity.class);
-                startActivity(intent);
-            });
-        }
-        // =====[MOD-END]=====
-
-        // 圆角背景
-        GradientDrawable trackpadBg = new GradientDrawable();
-        trackpadBg.setColor(0xFF2C2C2E);
-        trackpadBg.setCornerRadius(dpToPx(12));
-        trackpadBg.setStroke(dpToPx(1), 0x33FFFFFF);
-        if (trackpad != null) {
-            trackpad.setBackground(trackpadBg);
-        }
-
-        GradientDrawable indicatorBg = new GradientDrawable();
-        indicatorBg.setColor((accentColor & 0x00FFFFFF) | 0x80000000); // 50% 不透明度的主题色
-        indicatorBg.setCornerRadius(dpToPx(6));
-        indicatorBg.setStroke(dpToPx(1), Color.WHITE);
-        if (indicator != null) {
-            indicator.setBackground(indicatorBg);
-        }
-
+        // ===== 屏幕尺寸与窗口尺寸（官方同款逻辑）=====
         int sw = fwm.getClusterScreenWidth();
         int sh = fwm.getClusterScreenHeight();
+        if (sw <= 0) sw = 1920;
+        if (sh <= 0) sh = 720;
         int w = fwm.getClusterNaturalWidth();
         int h = fwm.getClusterNaturalHeight();
-
-        if (sw <= 0 || sh <= 0) {
-            sw = 1920;
-            sh = 720;
-        }
-        if (w <= 0 || h <= 0) {
-            w = dpToPx(160);
-            h = dpToPx(120);
-        }
-
-        final int finalSw = sw;
-        final int finalSh = sh;
-        final int finalW = w;
-        final int finalH = h;
+        if (w <= 0) w = dpToPx(160);
+        if (h <= 0) h = dpToPx(120);
+        moduleScreenW = sw;
+        moduleScreenH = sh;
         moduleWindowW = w;
         moduleWindowH = h;
 
-        final int[] currentPos = new int[]{ fwm.getClusterSavedPosX(), fwm.getClusterSavedPosY() };
+        currentPos[0] = fwm.getClusterSavedPosX();
+        currentPos[1] = fwm.getClusterSavedPosY();
+        positionLoaded = true;
 
-        Runnable refreshIndicator = new Runnable() {
-            @Override
-            public void run() {
-                if (trackpad == null || indicator == null || tvPosInfo == null) return;
-                int tw = trackpad.getWidth();
-                int th = trackpad.getHeight();
-                if (tw <= 0 || th <= 0) return;
+        setupControlButtons();
+        setupClearAll();
+        buildModuleList();
 
-                int iw = Math.max(20, Math.round(((float) finalW / finalSw) * tw));
-                int ih = Math.max(15, Math.round(((float) finalH / finalSh) * th));
-
-                ViewGroup.LayoutParams ilp = indicator.getLayoutParams();
-                if (ilp != null) {
-                    ilp.width = iw;
-                    ilp.height = ih;
-                    indicator.setLayoutParams(ilp);
-                }
-
-                int left = Math.round(((float) currentPos[0] / finalSw) * tw);
-                int top = Math.round(((float) currentPos[1] / finalSh) * th);
-
-                left = Math.max(0, Math.min(left, tw - iw));
-                top = Math.max(0, Math.min(top, th - ih));
-
-                indicator.setX(left);
-                indicator.setY(top);
-
-                tvPosInfo.setText(String.format("当前位置: X = %d px, Y = %d px", currentPos[0], currentPos[1]));
-            }
-        };
-
-        if (trackpad != null) {
-            // 比例自适应父容器
-            trackpad.post(new Runnable() {
-                @Override
-                public void run() {
-                    View parent = (View) trackpad.getParent();
-                    if (parent == null) return;
-                    int parentWidth = parent.getWidth() - parent.getPaddingLeft() - parent.getPaddingRight();
-                    int parentHeight = parent.getHeight() - parent.getPaddingTop() - parent.getPaddingBottom();
-                    if (parentWidth <= 0 || parentHeight <= 0) return;
-
-                    float targetRatio = (float) finalSw / finalSh;
-                    float parentRatio = (float) parentWidth / parentHeight;
-
-                    int finalWidth;
-                    int finalHeight;
-
-                    if (targetRatio > parentRatio) {
-                        finalWidth = parentWidth;
-                        finalHeight = Math.round(parentWidth / targetRatio);
-                    } else {
-                        finalHeight = parentHeight;
-                        finalWidth = Math.round(parentHeight * targetRatio);
-                    }
-
-                    ViewGroup.LayoutParams lp = trackpad.getLayoutParams();
-                    if (lp != null) {
-                        lp.width = finalWidth;
-                        lp.height = finalHeight;
-                        trackpad.setLayoutParams(lp);
-                    }
-                    trackpad.post(refreshIndicator);
-                }
-            });
-
-            trackpad.setOnTouchListener(new View.OnTouchListener() {
-                private boolean isDragging = false;
-
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    int tw = trackpad.getWidth();
-                    int th = trackpad.getHeight();
-                    if (tw <= 0 || th <= 0 || indicator == null) return false;
-
-                    int iw = indicator.getWidth();
-                    int ih = indicator.getHeight();
-
-                    float x = event.getX();
-                    float y = event.getY();
-
-                    switch (event.getAction()) {
-                        case MotionEvent.ACTION_DOWN:
-                            isDragging = true;
-                            int targetX = Math.round(((x - iw / 2f) / tw) * finalSw);
-                            int targetY = Math.round(((y - ih / 2f) / th) * finalSh);
-
-                            targetX = Math.max(0, Math.min(targetX, finalSw - finalW));
-                            targetY = Math.max(0, Math.min(targetY, finalSh - finalH));
-
-                            currentPos[0] = targetX;
-                            currentPos[1] = targetY;
-
-                            fwm.updateClusterPosition(targetX, targetY);
-                            refreshIndicator.run();
-                            return true;
-
-                        case MotionEvent.ACTION_MOVE:
-                            if (isDragging) {
-                                int moveX = Math.round(((x - iw / 2f) / tw) * finalSw);
-                                int moveY = Math.round(((y - ih / 2f) / th) * finalSh);
-
-                                moveX = Math.max(0, Math.min(moveX, finalSw - finalW));
-                                moveY = Math.max(0, Math.min(moveY, finalSh - finalH));
-
-                                currentPos[0] = moveX;
-                                currentPos[1] = moveY;
-
-                                fwm.updateClusterPosition(moveX, moveY);
-                                refreshIndicator.run();
-                            }
-                            return true;
-
-                        case MotionEvent.ACTION_UP:
-                        case MotionEvent.ACTION_CANCEL:
-                            isDragging = false;
-                            return true;
-                    }
-                    return false;
-                }
-            });
-        }
-
-        if (btnUp != null) {
-            btnUp.setOnClickListener(v -> {
-                currentPos[1] = Math.max(0, currentPos[1] - 5);
-                fwm.updateClusterPosition(currentPos[0], currentPos[1]);
-                refreshIndicator.run();
-            });
-        }
-        if (btnDown != null) {
-            btnDown.setOnClickListener(v -> {
-                currentPos[1] = Math.max(0, Math.min(currentPos[1] + 5, finalSh - finalH));
-                fwm.updateClusterPosition(currentPos[0], currentPos[1]);
-                refreshIndicator.run();
-            });
-        }
-        if (btnLeft != null) {
-            btnLeft.setOnClickListener(v -> {
-                currentPos[0] = Math.max(0, currentPos[0] - 5);
-                fwm.updateClusterPosition(currentPos[0], currentPos[1]);
-                refreshIndicator.run();
-            });
-        }
-        if (btnRight != null) {
-            btnRight.setOnClickListener(v -> {
-                currentPos[0] = Math.max(0, Math.min(currentPos[0] + 5, finalSw - finalW));
-                fwm.updateClusterPosition(currentPos[0], currentPos[1]);
-                refreshIndicator.run();
-            });
-        }
-        if (btnCenter != null) {
-            btnCenter.setOnClickListener(v -> {
-                currentPos[0] = (finalSw - finalW) / 2;
-                currentPos[1] = (finalSh - finalH) / 2;
-                fwm.updateClusterPosition(currentPos[0], currentPos[1]);
-                refreshIndicator.run();
-            });
-        }
-
-        // =====[MOD-BEGIN]副屏模块自定义系统：模拟屏模块方块=====
-        buildModuleHandles();
-        // =====[MOD-END]=====
+        // 布局完成后加载模块方块
+        mockScreen.post(this::loadModulesToMockScreen);
+        refreshIndicator();
     }
 
-    // =====[MOD-BEGIN]副屏模块自定义系统：模拟屏模块方块=====
     @Override
     protected void onResume() {
         super.onResume();
-        // 从"副屏模块调整"页返回时刷新模块方块
-        buildModuleHandles();
-    }
-
-    private void buildModuleHandles() {
-        if (indicator == null || trackpad == null) return;
-        for (View v : moduleHandles) {
-            indicator.removeView(v);
+        if (positionLoaded) {
+            mockScreen.post(this::loadModulesToMockScreen);
+            refreshIndicator();
         }
-        moduleHandles.clear();
-        final java.util.List<ModuleConfig> configs = ModuleConfig.loadAll(this);
-        if (configs.isEmpty()) return;
-        // 等待 indicator 布局完成后渲染
-        indicator.post(() -> {
-            for (ModuleConfig cfg : configs) {
-                addModuleHandle(cfg);
-            }
-        });
     }
 
-    private void addModuleHandle(final ModuleConfig cfg) {
-        if (indicator == null) return;
-        final int iw = Math.max(indicator.getWidth(), 1);
-        final int ih = Math.max(indicator.getHeight(), 1);
+    // ========================底部按键：窗口调位 ========================
 
-        FrameLayout handle = new FrameLayout(this);
+    private void setupControlButtons() {
+        setBtn(R.id.btn_pos_left, () -> moveWindow(-16, 0));
+        setBtn(R.id.btn_pos_up, () -> moveWindow(0, -16));
+        setBtn(R.id.btn_pos_right, () -> moveWindow(16, 0));
+        setBtn(R.id.btn_pos_down, () -> moveWindow(0, 16));
+        setBtn(R.id.btn_pos_center, () -> {
+            currentPos[0] = (moduleScreenW - moduleWindowW) / 2;
+            currentPos[1] = (moduleScreenH - moduleWindowH) / 2;
+            applyWindowPosition();
+        });
+        setBtn(R.id.btn_pos_done, this::finish);
+    }
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor((accentColor & 0x00FFFFFF) | 0xB3000000);
-        bg.setCornerRadius(dpToPx(4));
-        bg.setStroke(dpToPx(1), Color.WHITE);
-        handle.setBackground(bg);
+    private void setBtn(int id, Runnable action) {
+        View v = findViewById(id);
+        if (v != null) v.setOnClickListener(vv -> action.run());
+    }
 
-        TextView label = new TextView(this);
-        label.setText(ModuleRegistry.getName(cfg.moduleId));
-        label.setTextColor(Color.WHITE);
-        label.setTextSize(9);
-        label.setGravity(android.view.Gravity.CENTER);
-        handle.addView(label, new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT));
+    private void moveWindow(int dx, int dy) {
+        currentPos[0] = Math.max(0, Math.min(currentPos[0] + dx, moduleScreenW - moduleWindowW));
+        currentPos[1] = Math.max(0, Math.min(currentPos[1] + dy, moduleScreenH - moduleWindowH));
+        applyWindowPosition();
+    }
 
-        // 右下角缩放手柄
-        View grip = new View(this);
-        GradientDrawable gripBg = new GradientDrawable();
-        gripBg.setShape(GradientDrawable.OVAL);
-        gripBg.setColor(Color.WHITE);
-        grip.setBackground(gripBg);
-        FrameLayout.LayoutParams gripLp = new FrameLayout.LayoutParams(dpToPx(12), dpToPx(12));
-        gripLp.gravity = android.view.Gravity.BOTTOM | android.view.Gravity.END;
-        gripLp.setMargins(0, 0, dpToPx(1), dpToPx(1));
-        handle.addView(grip, gripLp);
+    private void applyWindowPosition() {
+        if (fwm != null) fwm.updateClusterPosition(currentPos[0], currentPos[1]);
+        refreshIndicator();
+    }
 
-        final float baseW = Math.max(dpToPx(40), Math.round(iw / 5f));
-        final float baseH = Math.round(baseW * 0.75f);
-        final float[] dragOffset = new float[2];
-        final boolean[] isResizing = new boolean[1];
+    private void refreshIndicator() {
+        if (tvPosInfo != null) {
+            tvPosInfo.setText(String.format("当前位置: X = %d px, Y = %d px", currentPos[0], currentPos[1]));
+        }
+        updateModuleHandleLayouts();
+    }
 
-        handle.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                FloatingWindowManager fwm = FloatingWindowManager.getInstance();
-                if (fwm == null) return false;
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        // 右下角 24dp 区域 = 缩放，其余 = 移动
-                        if (event.getRawX() >= v.getRight() - dpToPx(24) && event.getRawY() >= v.getBottom() - dpToPx(24)) {
-                            isResizing[0] = true;
-                        } else {
-                            isResizing[0] = false;
-                            dragOffset[0] = event.getRawX() - v.getX();
-                            dragOffset[1] = event.getRawY() - v.getY();
-                        }
-                        return true;
-                    case MotionEvent.ACTION_MOVE:
-                        if (isResizing[0]) {
-                            float nw = event.getRawX() - v.getLeft();
-                            float ns = Math.max(0.25f, Math.min(3.0f, nw / baseW));
-                            cfg.scale = ns;
-                            applyModuleHandleLayout(handle, cfg, baseW, baseH, iw, ih);
-                            fwm.updateModuleConfig(cfg.instanceId, cfg.x, cfg.y, cfg.scale);
-                        } else {
-                            float nx = event.getRawX() - dragOffset[0];
-                            float ny = event.getRawY() - dragOffset[1];
-                            float mw = baseW * cfg.scale;
-                            float mh = baseH * cfg.scale;
-                            nx = Math.max(0, Math.min(nx, iw - mw));
-                            ny = Math.max(0, Math.min(ny, ih - mh));
-                            // 模拟屏坐标 → 副屏窗口相对坐标
-                            cfg.x = Math.round((nx / iw) * moduleWindowW);
-                            cfg.y = Math.round((ny / ih) * moduleWindowH);
-                            handle.setX(nx);
-                            handle.setY(ny);
-                            fwm.updateModuleConfig(cfg.instanceId, cfg.x, cfg.y, cfg.scale);
-                        }
-                        return true;
-                    case MotionEvent.ACTION_UP:
-                    case MotionEvent.ACTION_CANCEL:
-                        isResizing[0] = false;
-                        return true;
+    // ========================左侧：模块列表 ========================
+
+    private void setupClearAll() {
+        View btnClearAll = findViewById(R.id.btn_clear_all);
+        if (btnClearAll != null) {
+            btnClearAll.setOnClickListener(v -> {
+                moduleConfigs = new ArrayList<>();
+                ModuleConfig.saveAll(this, moduleConfigs);
+                if (fwm != null) fwm.removeAllCustomModules();
+                loadModulesToMockScreen();
+                toast("已清空所有模块");
+            });
+        }
+    }
+
+    private void buildModuleList() {
+        if (moduleList == null) return;
+        moduleList.removeAllViews();
+        for (ModuleRegistry.ModuleInfo info : ModuleRegistry.getAll()) {
+            TextView row = new TextView(this);
+            row.setText("＋ " + info.name);
+            row.setTextSize(13);
+            row.setTextColor(0xFF4FC3F7);
+            row.setPadding(dpToPx(10), dpToPx(10), dpToPx(10), dpToPx(10));
+            GradientDrawable bg = new GradientDrawable();
+            bg.setColor(0x22FFFFFF);
+            bg.setCornerRadius(dpToPx(6));
+            row.setBackground(bg);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            lp.bottomMargin = dpToPx(6);
+            row.setLayoutParams(lp);
+            row.setOnClickListener(v -> {
+                if (fwm != null) {
+                    fwm.addCustomModule(info.id);
+                    toast("已添加：" + info.name);
+                    loadModulesToMockScreen();
                 }
-                return false;
-            }
+            });
+            moduleList.addView(row);
+        }
+    }
+
+    // ========================右侧：模拟副屏模块方块 ========================
+
+    /** 加载已保存模块到模拟屏（复用 ScalableModuleContainer，含缩放条） */
+    private void loadModulesToMockScreen() {
+        if (mockScreen == null) return;
+        mockScreen.removeAllViews();
+        moduleConfigs = ModuleConfig.loadAll(this);
+
+        if (moduleConfigs.isEmpty()) {
+            TextView emptyHint = new TextView(this);
+            emptyHint.setText("点击左侧模块添加到副屏");
+            emptyHint.setTextColor(0x66FFFFFF);
+            emptyHint.setTextSize(16);
+            emptyHint.setGravity(Gravity.CENTER);
+            mockScreen.addView(emptyHint, new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT));
+            return;
+        }
+
+        for (ModuleConfig cfg : moduleConfigs) {
+            addModuleToMockScreen(cfg);
+        }
+    }
+
+    private void addModuleToMockScreen(final ModuleConfig cfg) {
+        final ScalableModuleContainer mc = new ScalableModuleContainer(this, cfg);
+        mc.setOnConfigChangeListener(conf -> {
+            // 容器拖动/缩放后：模拟屏坐标反算回副屏窗口相对坐标，保存并实时同步
+            float[] wr = windowRectOnMockScreen();
+            conf.x = Math.round((mc.getX() - wr[0]) / Math.max(wr[2], 1) * moduleWindowW);
+            conf.y = Math.round((mc.getY() - wr[1]) / Math.max(wr[3], 1) * moduleWindowH);
+            ModuleConfig.saveAll(this, moduleConfigs);
+            if (fwm != null) fwm.updateModuleConfig(conf.instanceId, conf.x, conf.y, conf.scale);
+        });
+
+        // 布局完成后：按官方映射放置初始位置 + 限定拖动边界在模拟屏内
+        mockScreen.post(() -> {
+            if (mc.getParent() == null) return;
+            mc.setDragBounds(mockScreen.getWidth(), mockScreen.getHeight());
+            float[] wr = windowRectOnMockScreen();
+            float bx = wr[0] + (float) cfg.x / Math.max(moduleWindowW, 1) * wr[2];
+            float by = wr[1] + (float) cfg.y / Math.max(moduleWindowH, 1) * wr[3];
+            bx = Math.max(0, Math.min(bx, mockScreen.getWidth() - mc.getWidth()));
+            by = Math.max(0, Math.min(by, mockScreen.getHeight() - mc.getHeight()));
+            mc.setX(bx);
+            mc.setY(by);
         });
 
         // 长按删除
-        handle.setOnLongClickListener(v -> {
-            new AlertDialog.Builder(this)
+        mc.setOnLongClickListener(v -> {
+            new android.app.AlertDialog.Builder(this)
                     .setTitle("删除模块")
                     .setMessage("确定删除「" + ModuleRegistry.getName(cfg.moduleId) + "」吗？")
                     .setPositiveButton("删除", (d, w) -> {
-                        FloatingWindowManager fwm = FloatingWindowManager.getInstance();
                         if (fwm != null) fwm.removeCustomModule(cfg.instanceId);
-                        indicator.removeView(handle);
-                        moduleHandles.remove(handle);
+                        loadModulesToMockScreen();
                     })
                     .setNegativeButton("取消", null)
                     .show();
             return true;
         });
 
-        applyModuleHandleLayout(handle, cfg, baseW, baseH, iw, ih);
-        indicator.addView(handle, new FrameLayout.LayoutParams(
+        mockScreen.addView(mc, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 FrameLayout.LayoutParams.WRAP_CONTENT));
-        moduleHandles.add(handle);
     }
 
-    private void applyModuleHandleLayout(View handle, ModuleConfig cfg, float baseW, float baseH, int iw, int ih) {
-        float mw = Math.max(dpToPx(30), baseW * cfg.scale);
-        float mh = Math.max(dpToPx(22), baseH * cfg.scale);
-        ViewGroup.LayoutParams lp = handle.getLayoutParams();
-        if (lp != null) {
-            lp.width = Math.round(mw);
-            lp.height = Math.round(mh);
-            handle.setLayoutParams(lp);
+    /** 窗口移动/尺寸变化时，模块方块联动（窗口位置 + 模块相对窗口坐标，官方同款映射） */
+    private void updateModuleHandleLayouts() {
+        if (mockScreen == null) return;
+        for (int i = 0; i < mockScreen.getChildCount(); i++) {
+            View child = mockScreen.getChildAt(i);
+            if (child instanceof ScalableModuleContainer) {
+                ScalableModuleContainer mc = (ScalableModuleContainer) child;
+                ModuleConfig cfg = mc.getConfig();
+                float[] wr = windowRectOnMockScreen();
+                float bx = wr[0] + (float) cfg.x / Math.max(moduleWindowW, 1) * wr[2];
+                float by = wr[1] + (float) cfg.y / Math.max(moduleWindowH, 1) * wr[3];
+                bx = Math.max(0, Math.min(bx, mockScreen.getWidth() - mc.getWidth()));
+                by = Math.max(0, Math.min(by, mockScreen.getHeight() - mc.getHeight()));
+                mc.setX(bx);
+                mc.setY(by);
+            }
         }
-        float nx = Math.max(0, Math.min(((float) cfg.x / Math.max(moduleWindowW, 1)) * iw, iw - mw));
-        float ny = Math.max(0, Math.min(((float) cfg.y / Math.max(moduleWindowH, 1)) * ih, ih - mh));
-        handle.setX(nx);
-        handle.setY(ny);
     }
-    // =====[MOD-END]=====
+
+    /** 窗口在模拟屏上的矩形 —— 与官方 refreshIndicator 同一套公式 */
+    private float[] windowRectOnMockScreen() {
+        float tw = Math.max(mockScreen.getWidth(), 1);
+        float th = Math.max(mockScreen.getHeight(), 1);
+        float sw = Math.max(moduleScreenW, 1);
+        float sh = Math.max(moduleScreenH, 1);
+        float winX = (float) currentPos[0] / sw * tw;
+        float winY = (float) currentPos[1] / sh * th;
+        float winW = (float) moduleWindowW / sw * tw;
+        float winH = (float) moduleWindowH / sh * th;
+        return new float[]{winX, winY, winW, winH};
+    }
 
     private int dpToPx(int dp) {
-        return (int) (dp * getResources().getDisplayMetrics().density + 0.5f);
+        return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 
-    private boolean isDarkColor(int color) {
-        return ((color >> 16) & 0xFF) * 0.299
-                + ((color >> 8) & 0xFF) * 0.587
-                + (color & 0xFF) * 0.114 < 100;
+    private void toast(String msg) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    }
+
+    @SuppressWarnings("unused")
+    private Context getCtx() {
+        return this;
     }
 }

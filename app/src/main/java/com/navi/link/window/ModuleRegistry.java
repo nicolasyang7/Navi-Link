@@ -32,7 +32,7 @@ public class ModuleRegistry {
         MODULES.add(new ModuleInfo("module_traffic_light", "红绿灯", R.layout.module_traffic_light));
         MODULES.add(new ModuleInfo("module_turn_icon", "转向图标", R.layout.module_turn_icon));
         MODULES.add(new ModuleInfo("module_turn_distance", "转向距离", R.layout.module_turn_distance));
-        MODULES.add(new ModuleInfo("module_tmc_progress", "路况进度条", R.layout.module_tmc_progress));
+        MODULES.add(new ModuleInfo("module_tmc_progress", "TMC路况进度条", R.layout.module_tmc_progress));
         MODULES.add(new ModuleInfo("module_eta", "预计到达时间", R.layout.module_eta));
         MODULES.add(new ModuleInfo("module_exit_info", "出口信息", R.layout.module_exit_info));
         MODULES.add(new ModuleInfo("module_speed_limit", "限速", R.layout.module_speed_limit));
