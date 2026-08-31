@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tv_module_speed_limit"
+    android:layout_width="50dp"
+    android:layout_height="50dp"
+    android:background="@drawable/bg_camera_speed_circle"
+    android:gravity="center"
+    android:text="80"
+    android:textColor="#1a1a1a"
+    android:textSize="24sp"
+    android:textStyle="bold"
+    android:visibility="gone" />
