@@ -11,6 +11,7 @@ import com.navi.link.utils.*;
 import java.util.ArrayList;
 import java.util.List;
 
+
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.PendingIntent;
@@ -228,6 +229,9 @@ public class FloatingWindowManager {
 
     private FloatingWindowManager(Context context) {
         this.context = context.getApplicationContext();
+        // =====[MOD-BEGIN]副屏模块自定义系统：文件日志初始化（无 adb 车机用）=====
+        com.navi.link.utils.CustomLog.init(context);
+        // =====[MOD-END]=====
         this.windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         loadPreferences();
     }
@@ -343,6 +347,28 @@ public class FloatingWindowManager {
             ModuleConfig.saveAll(context, list);
         }
     }
+
+    // =====[MOD-BEGIN]副屏模块自定义系统：调整页模拟屏远程同步=====
+    /** 调整页模拟屏远程更新模块位置/缩放（实时） */
+    public void updateModuleConfig(String instanceId, float x, float y, float scale) {
+        CustomLog.d("[管理] updateModuleConfig: " + instanceId + " pos=(" + Math.round(x) + "," + Math.round(y) + ") scale=" + scale);
+        if (clusterActiveWindow instanceof CustomDisplayWindow) {
+            ((CustomDisplayWindow) clusterActiveWindow).updateModuleConfig(instanceId, x, y, scale);
+        } else {
+            //副屏未激活：直接更新配置存储
+            List<ModuleConfig> list = ModuleConfig.loadAll(context);
+            for (ModuleConfig cfg : list) {
+                if (cfg.instanceId.equals(instanceId)) {
+                    cfg.x = x;
+                    cfg.y = y;
+                    cfg.scale = scale;
+                    break;
+                }
+            }
+            ModuleConfig.saveAll(context, list);
+        }
+    }
+    // =====[MOD-END]=====
 
     /** 副屏移除一个自定义模块实例 */
     public void removeCustomModule(String instanceId) {
@@ -1847,12 +1873,20 @@ public class FloatingWindowManager {
 
             clusterFloatingView = clusterWrapper;
 
-            CustomLog.d("[管理] 副屏模块自定义窗口已创建 (CustomDisplayWindow)");
-            clusterActiveWindow = new CustomDisplayWindow(clusterContext, inflated);
-        // [MOD-END]
-            if (clusterActiveWindow != null) {
-                clusterActiveWindow.setClusterWindow(true);
+            // =====[MOD-BEGIN]副屏模块自定义系统：窗口创建加固=====
+            try {
+                CustomLog.d("[管理] 副屏模块自定义窗口创建中: cluster=" + clusterContext.getDisplay());
+                clusterActiveWindow = new CustomDisplayWindow(clusterContext, inflated);
+                if (clusterActiveWindow != null) {
+                    clusterActiveWindow.setClusterWindow(true);
+                }
+                CustomLog.d("[管理] 副屏模块自定义窗口创建成功");
+            } catch (Exception e) {
+                //HDMI/外接屏等异常场景：降级为空窗口，不崩溃
+                CustomLog.e("[管理] 副屏模块自定义窗口创建失败，降级为空窗口", e);
+                clusterActiveWindow = null;
             }
+            // =====[MOD-END]=====
 
             restoreCachedDataForCluster();
             measureNaturalSizeForCluster(clusterFloatingView);

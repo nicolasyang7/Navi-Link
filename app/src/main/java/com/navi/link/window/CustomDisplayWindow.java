@@ -63,24 +63,30 @@ public class CustomDisplayWindow extends BaseFloatingWindow {
 
     public CustomDisplayWindow(Context context, View floatingView) {
         super(context, floatingView);
+        com.navi.link.utils.CustomLog.init(context);
     }
 
     @Override
     protected void initViews() {
-        CustomLog.d("[副屏窗口] initViews: 创建模块容器");
-        moduleContainer = new FrameLayout(context);
-        moduleContainer.setClipChildren(false);
-        moduleContainer.setClipToPadding(false);
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT);
-        ((ViewGroup) floatingView).addView(moduleContainer, lp);
+        try {
+            CustomLog.d("[副屏窗口] initViews: 创建模块容器");
+            moduleContainer = new FrameLayout(context);
+            moduleContainer.setClipChildren(false);
+            moduleContainer.setClipToPadding(false);
+            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.WRAP_CONTENT,
+                    FrameLayout.LayoutParams.WRAP_CONTENT);
+            ((ViewGroup) floatingView).addView(moduleContainer, lp);
 
-        // 恢复已保存的模块配置
-        List<ModuleConfig> configs = ModuleConfig.loadAll(context);
-        CustomLog.d("[副屏窗口] 恢复模块配置: " + configs.size() + " 个");
-        for (ModuleConfig cfg : configs) {
-            addModuleInstance(cfg);
+            // 恢复已保存的模块配置
+            List<ModuleConfig> configs = ModuleConfig.loadAll(context);
+            CustomLog.d("[副屏窗口] 恢复模块配置: " + configs.size() + " 个");
+            for (ModuleConfig cfg : configs) {
+                addModuleInstance(cfg);
+            }
+        } catch (Exception e) {
+            //单个模块/配置异常不影响窗口创建，降级为空窗口
+            CustomLog.e("[副屏窗口] initViews异常，已降级为空窗口", e);
         }
     }
 
@@ -125,18 +131,38 @@ public class CustomDisplayWindow extends BaseFloatingWindow {
         }
     }
 
+    // =====[MOD-BEGIN]副屏模块自定义系统：调整页模拟屏远程同步=====
+    /** 调整页模拟屏远程更新模块位置/缩放（实时） */
+    public void updateModuleConfig(String instanceId, float x, float y, float scale) {
+        for (ScalableModuleContainer mc : modules) {
+            if (mc.getConfig().instanceId.equals(instanceId)) {
+                mc.setPosition(x, y);
+                mc.setScale(scale);
+                scheduleSave();
+                return;
+            }
+        }
+        CustomLog.d("[副屏窗口] 远程同步未找到模块实例: " + instanceId);
+    }
+    // =====[MOD-END]=====
+
     private void addModuleInstance(ModuleConfig cfg) {
-        CustomLog.d("[副屏窗口] 实例化模块: " + cfg.moduleId + " 实例=" + cfg.instanceId + " scale=" + cfg.scale + " pos=(" + Math.round(cfg.x) + "," + Math.round(cfg.y) + ")");
-        ScalableModuleContainer mc = new ScalableModuleContainer(context, cfg);
-        mc.setOnConfigChangeListener(conf -> scheduleSave());
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT);
-        lp.leftMargin = Math.round(cfg.x);
-        lp.topMargin = Math.round(cfg.y);
-        moduleContainer.addView(mc, lp);
-        modules.add(mc);
-        refreshModuleWithCache(mc);
+        try {
+            CustomLog.d("[副屏窗口] 实例化模块: " + cfg.moduleId + " 实例=" + cfg.instanceId + " scale=" + cfg.scale + " pos=(" + Math.round(cfg.x) + "," + Math.round(cfg.y) + ")");
+            ScalableModuleContainer mc = new ScalableModuleContainer(context, cfg);
+            mc.setOnConfigChangeListener(conf -> scheduleSave());
+            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.WRAP_CONTENT,
+                    FrameLayout.LayoutParams.WRAP_CONTENT);
+            lp.leftMargin = Math.round(cfg.x);
+            lp.topMargin = Math.round(cfg.y);
+            moduleContainer.addView(mc, lp);
+            modules.add(mc);
+            refreshModuleWithCache(mc);
+        } catch (Exception e) {
+            //单个模块失败不影响其他模块和窗口本身
+            CustomLog.e("[副屏窗口] 模块实例化失败: " + (cfg != null ? cfg.moduleId : "null"), e);
+        }
     }
 
     /** 防抖保存：多次变化 300ms 合并为一次写盘 */

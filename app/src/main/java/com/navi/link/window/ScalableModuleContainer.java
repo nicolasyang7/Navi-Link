@@ -88,6 +88,21 @@ public class ScalableModuleContainer extends FrameLayout {
         return config;
     }
 
+    // =====[MOD-BEGIN]副屏模块自定义系统：调整页模拟屏远程控制=====
+    /** 供调整页模拟屏远程设置缩放比例 */
+    public void setScale(float newScale) {
+        applyScale(newScale);
+    }
+
+    /** 供调整页模拟屏远程设置位置（相对模块容器坐标） */
+    public void setPosition(float x, float y) {
+        setX(x);
+        setY(y);
+        config.x = x;
+        config.y = y;
+    }
+    // =====[MOD-END]=====
+
     public void setOnConfigChangeListener(OnConfigChangeListener listener) {
         this.listener = listener;
     }

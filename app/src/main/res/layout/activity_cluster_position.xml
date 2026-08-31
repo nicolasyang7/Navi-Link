@@ -169,6 +169,20 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- =====[MOD-BEGIN]副屏模块自定义系统：模块调整入口===== -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_pos_modules"
+        style="@style/Widget.MaterialComponents.Button"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="副屏模块调整"
+        android:textSize="14sp"
+        android:textColor="#FFFFFFFF"
+        android:layout_marginBottom="12dp"
+        app:backgroundTint="#FF2C2C2E"
+        app:cornerRadius="8dp" />
+    <!-- =====[MOD-END]===== -->
+
     <!-- Confirm Button -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_pos_done"

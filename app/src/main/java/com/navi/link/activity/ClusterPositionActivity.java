@@ -10,7 +10,9 @@ import com.navi.link.service.*;
 import com.navi.link.utils.*;
 
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
@@ -44,6 +46,12 @@ public class ClusterPositionActivity extends AppCompatActivity {
     private View btnLeft;
     private View btnRight;
     private MaterialButton btnDone;
+    // =====[MOD-BEGIN]副屏模块自定义系统=====
+    private MaterialButton btnModules;
+    private int moduleWindowW = 480;
+    private int moduleWindowH = 360;
+    private final java.util.List<android.view.View> moduleHandles = new java.util.ArrayList<>();
+    // =====[MOD-END]=====
 
     private int themeColor = 0xFF4FC3F7;
     private int accentColor = 0xFF4FC3F7;
@@ -113,6 +121,17 @@ public class ClusterPositionActivity extends AppCompatActivity {
             btnDone.setOnClickListener(v -> finish());
         }
 
+        // =====[MOD-BEGIN]副屏模块自定义系统：模块调整入口=====
+        btnModules = findViewById(R.id.btn_pos_modules);
+        if (btnModules != null) {
+            btnModules.setBackgroundTintList(ColorStateList.valueOf(0xFF3A3A3C));
+            btnModules.setOnClickListener(v -> {
+                Intent intent = new Intent(this, DisplayAdjustActivity.class);
+                startActivity(intent);
+            });
+        }
+        // =====[MOD-END]=====
+
         // 圆角背景
         GradientDrawable trackpadBg = new GradientDrawable();
         trackpadBg.setColor(0xFF2C2C2E);
@@ -148,6 +167,8 @@ public class ClusterPositionActivity extends AppCompatActivity {
         final int finalSh = sh;
         final int finalW = w;
         final int finalH = h;
+        moduleWindowW = w;
+        moduleWindowH = h;
 
         final int[] currentPos = new int[]{ fwm.getClusterSavedPosX(), fwm.getClusterSavedPosY() };
 
@@ -310,7 +331,159 @@ public class ClusterPositionActivity extends AppCompatActivity {
                 refreshIndicator.run();
             });
         }
+
+        // =====[MOD-BEGIN]副屏模块自定义系统：模拟屏模块方块=====
+        buildModuleHandles();
+        // =====[MOD-END]=====
     }
+
+    // =====[MOD-BEGIN]副屏模块自定义系统：模拟屏模块方块=====
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // 从"副屏模块调整"页返回时刷新模块方块
+        buildModuleHandles();
+    }
+
+    private void buildModuleHandles() {
+        if (indicator == null || trackpad == null) return;
+        for (View v : moduleHandles) {
+            indicator.removeView(v);
+        }
+        moduleHandles.clear();
+        final java.util.List<ModuleConfig> configs = ModuleConfig.loadAll(this);
+        if (configs.isEmpty()) return;
+        // 等待 indicator 布局完成后渲染
+        indicator.post(() -> {
+            for (ModuleConfig cfg : configs) {
+                addModuleHandle(cfg);
+            }
+        });
+    }
+
+    private void addModuleHandle(final ModuleConfig cfg) {
+        if (indicator == null) return;
+        final int iw = Math.max(indicator.getWidth(), 1);
+        final int ih = Math.max(indicator.getHeight(), 1);
+
+        FrameLayout handle = new FrameLayout(this);
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor((accentColor & 0x00FFFFFF) | 0xB3000000);
+        bg.setCornerRadius(dpToPx(4));
+        bg.setStroke(dpToPx(1), Color.WHITE);
+        handle.setBackground(bg);
+
+        TextView label = new TextView(this);
+        label.setText(ModuleRegistry.getName(cfg.moduleId));
+        label.setTextColor(Color.WHITE);
+        label.setTextSize(9);
+        label.setGravity(android.view.Gravity.CENTER);
+        handle.addView(label, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT));
+
+        // 右下角缩放手柄
+        View grip = new View(this);
+        GradientDrawable gripBg = new GradientDrawable();
+        gripBg.setShape(GradientDrawable.OVAL);
+        gripBg.setColor(Color.WHITE);
+        grip.setBackground(gripBg);
+        FrameLayout.LayoutParams gripLp = new FrameLayout.LayoutParams(dpToPx(12), dpToPx(12));
+        gripLp.gravity = android.view.Gravity.BOTTOM | android.view.Gravity.END;
+        gripLp.setMargins(0, 0, dpToPx(1), dpToPx(1));
+        handle.addView(grip, gripLp);
+
+        final float baseW = Math.max(dpToPx(40), Math.round(iw / 5f));
+        final float baseH = Math.round(baseW * 0.75f);
+        final float[] dragOffset = new float[2];
+        final boolean[] isResizing = new boolean[1];
+
+        handle.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                FloatingWindowManager fwm = FloatingWindowManager.getInstance();
+                if (fwm == null) return false;
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        // 右下角 24dp 区域 = 缩放，其余 = 移动
+                        if (event.getRawX() >= v.getRight() - dpToPx(24) && event.getRawY() >= v.getBottom() - dpToPx(24)) {
+                            isResizing[0] = true;
+                        } else {
+                            isResizing[0] = false;
+                            dragOffset[0] = event.getRawX() - v.getX();
+                            dragOffset[1] = event.getRawY() - v.getY();
+                        }
+                        return true;
+                    case MotionEvent.ACTION_MOVE:
+                        if (isResizing[0]) {
+                            float nw = event.getRawX() - v.getLeft();
+                            float ns = Math.max(0.25f, Math.min(3.0f, nw / baseW));
+                            cfg.scale = ns;
+                            applyModuleHandleLayout(handle, cfg, baseW, baseH, iw, ih);
+                            fwm.updateModuleConfig(cfg.instanceId, cfg.x, cfg.y, cfg.scale);
+                        } else {
+                            float nx = event.getRawX() - dragOffset[0];
+                            float ny = event.getRawY() - dragOffset[1];
+                            float mw = baseW * cfg.scale;
+                            float mh = baseH * cfg.scale;
+                            nx = Math.max(0, Math.min(nx, iw - mw));
+                            ny = Math.max(0, Math.min(ny, ih - mh));
+                            // 模拟屏坐标 → 副屏窗口相对坐标
+                            cfg.x = Math.round((nx / iw) * moduleWindowW);
+                            cfg.y = Math.round((ny / ih) * moduleWindowH);
+                            handle.setX(nx);
+                            handle.setY(ny);
+                            fwm.updateModuleConfig(cfg.instanceId, cfg.x, cfg.y, cfg.scale);
+                        }
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        isResizing[0] = false;
+                        return true;
+                }
+                return false;
+            }
+        });
+
+        // 长按删除
+        handle.setOnLongClickListener(v -> {
+            new AlertDialog.Builder(this)
+                    .setTitle("删除模块")
+                    .setMessage("确定删除「" + ModuleRegistry.getName(cfg.moduleId) + "」吗？")
+                    .setPositiveButton("删除", (d, w) -> {
+                        FloatingWindowManager fwm = FloatingWindowManager.getInstance();
+                        if (fwm != null) fwm.removeCustomModule(cfg.instanceId);
+                        indicator.removeView(handle);
+                        moduleHandles.remove(handle);
+                    })
+                    .setNegativeButton("取消", null)
+                    .show();
+            return true;
+        });
+
+        applyModuleHandleLayout(handle, cfg, baseW, baseH, iw, ih);
+        indicator.addView(handle, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT));
+        moduleHandles.add(handle);
+    }
+
+    private void applyModuleHandleLayout(View handle, ModuleConfig cfg, float baseW, float baseH, int iw, int ih) {
+        float mw = Math.max(dpToPx(30), baseW * cfg.scale);
+        float mh = Math.max(dpToPx(22), baseH * cfg.scale);
+        ViewGroup.LayoutParams lp = handle.getLayoutParams();
+        if (lp != null) {
+            lp.width = Math.round(mw);
+            lp.height = Math.round(mh);
+            handle.setLayoutParams(lp);
+        }
+        float nx = Math.max(0, Math.min(((float) cfg.x / Math.max(moduleWindowW, 1)) * iw, iw - mw));
+        float ny = Math.max(0, Math.min(((float) cfg.y / Math.max(moduleWindowH, 1)) * ih, ih - mh));
+        handle.setX(nx);
+        handle.setY(ny);
+    }
+    // =====[MOD-END]=====
 
     private int dpToPx(int dp) {
         return (int) (dp * getResources().getDisplayMetrics().density + 0.5f);

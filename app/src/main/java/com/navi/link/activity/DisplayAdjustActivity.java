@@ -15,8 +15,8 @@ import com.navi.link.window.ModuleConfig;
 import com.navi.link.window.ModuleRegistry;
 import com.navi.link.utils.CustomLog;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 副屏模块调整页
