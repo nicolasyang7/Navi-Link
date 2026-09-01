@@ -8,8 +8,6 @@ import com.navi.link.view.*;
 import com.navi.link.receiver.*;
 import com.navi.link.service.*;
 import com.navi.link.utils.*;
-import java.util.ArrayList;
-import java.util.List;
 
 
 import android.animation.ObjectAnimator;
@@ -42,7 +40,6 @@ import androidx.core.view.ViewCompat;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 
 public class FloatingWindowManager {
 
@@ -162,6 +159,7 @@ public class FloatingWindowManager {
     private int cachedCarDirection = 0;
     private String cachedTmcJson = null;
     private String cachedDriveWayJson = null;
+    private JSONArray cachedCruiseLights = null; // [MOD] 巡航红绿灯缓存（getter支持）
     private String cachedExitName = "";
     private String cachedExitDirection = "";
     private String cachedSapaName = "";
@@ -229,9 +227,6 @@ public class FloatingWindowManager {
 
     private FloatingWindowManager(Context context) {
         this.context = context.getApplicationContext();
-        // =====[MOD-BEGIN]副屏模块自定义系统：文件日志初始化（无 adb 车机用）=====
-        com.navi.link.utils.CustomLog.init(context);
-        // =====[MOD-END]=====
         this.windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         loadPreferences();
     }
@@ -302,6 +297,42 @@ public class FloatingWindowManager {
                 .apply();
     }
 
+    // ========================[MOD]副屏模块化：只读缓存 getter（V12，不改任何现有逻辑）=======================
+
+    public int getCachedSpeed() { return cachedSpeed; }
+
+    public String getCachedRoadName() { return cachedRoadName; }
+
+    public String getCachedLaneLines() { return cachedDriveWayJson; }
+
+    /** 巡航红绿灯（多灯 JSONArray），无数据返回 null */
+    public JSONArray getCachedTrafficLights() { return cachedCruiseLights; }
+
+    public int getCachedLightStatus() { return cachedLightStatus; }
+
+    public int getCachedLightDir() { return cachedLightDir; }
+
+    public int getCachedLightCountdown() { return cachedLightCountdown; }
+
+    public String getCachedTmc() { return cachedTmcJson; }
+
+    public int getCachedIcon() { return cachedIcon; }
+
+    public String getCachedDisNum() { return cachedDisNum; }
+
+    public String getCachedDisUnit() { return cachedDisUnit; }
+
+    public String getCachedEta() { return cachedEta; }
+
+    public String getCachedExit() { return cachedExitName; }
+
+    public int getCachedLimit() { return cachedLimitedSpeed; }
+
+    /** 电子眼：[type, dist, speed] */
+    public int[] getCachedCam() { return new int[]{cachedCameraType, cachedCameraDist, cachedCameraSpeed}; }
+
+    public int getCachedCarDirection() { return cachedCarDirection; }
+
     public float getClusterScale() {
         return clusterScale;
     }
@@ -313,95 +344,6 @@ public class FloatingWindowManager {
             onClusterMirrorConfigChanged();
         }
     }
-
-    // [MOD-BEGIN] 副屏模块自定义系统：模块管理方法
-    // ======================== 副屏模块自定义系统 ========================
-
-    /** 副屏添加一个自定义模块（可重复添加，每次独立实例）；副屏未启用时先持久化，启用后自动恢复 */
-    // [MOD-BEGIN] 副屏模块自定义系统：主题色访问器
-    /** 返回当前主题色（供副屏模块控制条跟随主题） */
-    public int getThemeColor() {
-        return themeColor;
-    }
-    // [MOD-END] 副屏模块自定义系统：主题色访问器
-    // [MOD-END]
-
-    /** 副屏添加一个自定义模块（可重复添加） */
-    public void addCustomModule(String moduleId) {
-        if (ModuleRegistry.get(moduleId) == null) {
-            CustomLog.d("[管理] addCustomModule 未知模块ID: " + moduleId);
-            return;
-        }
-        CustomLog.d("[管理] addCustomModule: " + moduleId + " (副屏激活=" + (clusterActiveWindow instanceof CustomDisplayWindow) + ")");
-        if (clusterActiveWindow instanceof CustomDisplayWindow) {
-            ((CustomDisplayWindow) clusterActiveWindow).addModule(moduleId);
-        } else {
-            //副屏未启用：先持久化，启用后自动恢复（带数量上限保护）
-            List<ModuleConfig> list = ModuleConfig.loadAll(context);
-            if (list.size() >= 30) {
-                CustomLog.d("[管理] 模块数量已达上限 30");
-                Toast.makeText(context, "模块数量已达上限(30)", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            list.add(new ModuleConfig(ModuleConfig.newInstanceId(moduleId), moduleId, 1.0f, 0f, 0f));
-            ModuleConfig.saveAll(context, list);
-        }
-    }
-
-    // =====[MOD-BEGIN]副屏模块自定义系统：调整页模拟屏远程同步=====
-    /** 调整页模拟屏远程更新模块位置/缩放（实时） */
-    public void updateModuleConfig(String instanceId, float x, float y, float scale) {
-        CustomLog.d("[管理] updateModuleConfig: " + instanceId + " pos=(" + Math.round(x) + "," + Math.round(y) + ") scale=" + scale);
-        if (clusterActiveWindow instanceof CustomDisplayWindow) {
-            ((CustomDisplayWindow) clusterActiveWindow).updateModuleConfig(instanceId, x, y, scale);
-        } else {
-            //副屏未激活：直接更新配置存储
-            List<ModuleConfig> list = ModuleConfig.loadAll(context);
-            for (ModuleConfig cfg : list) {
-                if (cfg.instanceId.equals(instanceId)) {
-                    cfg.x = x;
-                    cfg.y = y;
-                    cfg.scale = scale;
-                    break;
-                }
-            }
-            ModuleConfig.saveAll(context, list);
-        }
-    }
-    // =====[MOD-END]=====
-
-    /** 副屏移除一个自定义模块实例 */
-    // =====[MOD-BEGIN]副屏模块自定义系统：清空所有模块=====
-    public void removeAllCustomModules() {
-        if (clusterActiveWindow instanceof CustomDisplayWindow) {
-            ((CustomDisplayWindow) clusterActiveWindow).removeAllModules();
-        } else {
-            ModuleConfig.saveAll(context, new ArrayList<ModuleConfig>());
-        }
-        CustomLog.d("[管理] removeAllCustomModules");
-    }
-    // =====[MOD-END]=====
-    public void removeCustomModule(String instanceId) {
-        CustomLog.d("[管理] removeCustomModule: " + instanceId + " (副屏激活=" + (clusterActiveWindow instanceof CustomDisplayWindow) + ")");
-        if (clusterActiveWindow instanceof CustomDisplayWindow) {
-            ((CustomDisplayWindow) clusterActiveWindow).removeModule(instanceId);
-        } else {
-            List<ModuleConfig> list = ModuleConfig.loadAll(context);
-            List<ModuleConfig> result = new ArrayList<>();
-            for (ModuleConfig cfg : list) {
-                if (!cfg.instanceId.equals(instanceId)) {
-                    result.add(cfg);
-                }
-            }
-            ModuleConfig.saveAll(context, result);
-        }
-    }
-
-    /** 副屏当前是否为模块自定义窗口 */
-    public boolean isCustomDisplayActive() {
-        return clusterActiveWindow instanceof CustomDisplayWindow;
-    }
-    // [MOD-END] 副屏模块自定义系统：模块管理方法
 
     // ======================== 窗口显示与隐藏 ========================
 
@@ -1380,6 +1322,7 @@ public class FloatingWindowManager {
     }
 
     public void updateCruiseTrafficLights(JSONArray lightsArray) {
+        cachedCruiseLights = lightsArray; // [MOD] 缓存巡航红绿灯
         if (!isShowing || currentMode != MODE_CRUISE) return;
 
 //        // 巡航红绿灯提示音：优先取直行灯(dir==2)，没有则取第一个
@@ -1867,36 +1810,67 @@ public class FloatingWindowManager {
                 return;
             }
 
-            // [MOD-BEGIN] 副屏模块自定义系统：副屏唯一窗口
-            // ===== 副屏模块自定义系统：副屏唯一窗口 CustomDisplayWindow =====
-            // 模块化副屏：不再镜像主屏固定布局，改为动态管理自定义模块（主屏完全不受影响）
+            int effectiveStyle = currentMode == MODE_CRUISE ? cruiseStyleMode : styleMode;
+            int layoutRes;
+            if (currentMode == MODE_NAVI) {
+                if (styleMode == 2) layoutRes = R.layout.layout_floating_navi_full;
+                else if (styleMode == 1) layoutRes = R.layout.layout_floating_navi_minimal;
+                else layoutRes = R.layout.layout_floating_navi_normal;
+            } else {
+                layoutRes = effectiveStyle == 1
+                        ? R.layout.layout_floating_cruise_minimal
+                        : effectiveStyle == 2
+                        ? R.layout.layout_floating_cruise_full
+                        : R.layout.layout_floating_cruise_normal;
+            }
+
+            View inflated = new FrameLayout(clusterContext); // [MOD] 副屏模块化：空宿主容器
+            applyCustomWindowWidth(inflated, layoutRes);
+
+            // 统一包裹 FrameLayout：超速红色边框覆盖层与内容共用同一容器（与主屏一致）
             FrameLayout clusterWrapper = new FrameLayout(clusterContext);
             clusterWrapper.setClipChildren(false);
             clusterWrapper.setClipToPadding(false);
-
-            View inflated = new FrameLayout(clusterContext);
             clusterWrapper.addView(inflated, new FrameLayout.LayoutParams(
                     FrameLayout.LayoutParams.WRAP_CONTENT,
                     FrameLayout.LayoutParams.WRAP_CONTENT));
 
-            clusterScaleTarget = null;
+            if (currentMode == MODE_NAVI && styleMode >= 1) {
+                clusterScaleTarget = inflated;
+            } else {
+                clusterScaleTarget = null;
+            }
+
+            float scale = getClusterScale();
+            if (scale != 1.0f) {
+                physicalScaleContent(inflated, scale);
+            }
+
+            // 创建超速红色边框覆盖层（圆角跟随窗口样式，与主屏逻辑一致）
+            boolean clusterIsIslandStyle = effectiveStyle == 1;
+            int clusterCornerDp = clusterIsIslandStyle ? 40 : 12;
+            int clusterCornerPx = Math.round(dpToPx(clusterCornerDp) * getClusterScale());
+            View clusterBorderView = new View(clusterContext);
+            GradientDrawable clusterBorderDrawable = new GradientDrawable();
+            clusterBorderDrawable.setShape(GradientDrawable.RECTANGLE);
+            clusterBorderDrawable.setStroke(Math.round(dpToPx(3) * getClusterScale()), Color.RED);
+            clusterBorderDrawable.setColor(Color.TRANSPARENT);
+            clusterBorderDrawable.setCornerRadius(clusterCornerPx);
+            clusterBorderView.setBackground(clusterBorderDrawable);
+            clusterBorderView.setVisibility(View.GONE);
+            clusterBorderView.setClickable(false);
+            clusterBorderView.setFocusable(false);
+            clusterWrapper.addView(clusterBorderView, new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT));
+            clusterOverspeedBorderView = clusterBorderView;
 
             clusterFloatingView = clusterWrapper;
 
-            // =====[MOD-BEGIN]副屏模块自定义系统：窗口创建加固=====
-            try {
-                CustomLog.d("[管理] 副屏模块自定义窗口创建中: cluster=" + clusterContext.getDisplay());
-                clusterActiveWindow = new CustomDisplayWindow(clusterContext, inflated);
-                if (clusterActiveWindow != null) {
-                    clusterActiveWindow.setClusterWindow(true);
-                }
-                CustomLog.d("[管理] 副屏模块自定义窗口创建成功");
-            } catch (Exception e) {
-                //HDMI/外接屏等异常场景：降级为空窗口，不崩溃
-                CustomLog.e("[管理] 副屏模块自定义窗口创建失败，降级为空窗口", e);
-                clusterActiveWindow = null;
+            clusterActiveWindow = new CustomDisplayWindow(clusterContext, inflated); // [MOD] 副屏模块化：唯一触点
+            if (clusterActiveWindow != null) {
+                clusterActiveWindow.setClusterWindow(true);
             }
-            // =====[MOD-END]=====
 
             restoreCachedDataForCluster();
             measureNaturalSizeForCluster(clusterFloatingView);
