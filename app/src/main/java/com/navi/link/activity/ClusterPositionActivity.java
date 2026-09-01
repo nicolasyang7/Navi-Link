@@ -220,8 +220,10 @@ public class ClusterPositionActivity extends AppCompatActivity {
         }
         buildModuleList();
 
-        // 首次加载 + 数据刷新
-        mockScreen.post(this::loadModulesToMockScreen);
+        // 首次加载 + 数据刷新（判空防御：布局缺失时不崩溃）
+        if (mockScreen != null) {
+            mockScreen.post(this::loadModulesToMockScreen);
+        }
         startDataRefresh();
     }
 
