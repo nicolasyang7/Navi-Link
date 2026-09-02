@@ -115,23 +115,25 @@ public class ModulePreviewContainer extends FrameLayout {
     private void applyInitialScale(float newScale) {
         float clamped = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
         config.scale = clamped;
-        if (contentView != null) {
-            // 直接生效（无 post），pivot 左上角
-            contentView.setPivotX(0);
-            contentView.setPivotY(0);
+        if (contentView != null && contentView.getWidth() > 0) {
+            // 中心锚点：原地放大，不偏移
+            contentView.setPivotX(contentView.getWidth() / 2f);
+            contentView.setPivotY(contentView.getHeight() / 2f);
             contentView.setScaleX(clamped);
             contentView.setScaleY(clamped);
         }
         updateResizeHandlePosition();
     }
 
-    /**缩放手柄定位到 contentView 视觉右下角（车机助手 updateResizeHandlePosition 同款） */
+    /**缩放手柄定位到 contentView 视觉右下角（中心锚点下） */
     private void updateResizeHandlePosition() {
-        if (resizeHandle == null || contentView == null) return;
-        float w = contentView.getWidth() * contentView.getScaleX();
-        float h = contentView.getHeight() * contentView.getScaleY();
-        resizeHandle.setX(w - resizeHandle.getWidth() / 2f);
-        resizeHandle.setY(h - resizeHandle.getHeight() / 2f);
+        if (resizeHandle == null || contentView == null || contentView.getWidth() <= 0) return;
+        float w = contentView.getWidth();
+        float h = contentView.getHeight();
+        float scale = config.scale;
+        // 中心锚点：视觉右下角 = (w*(1+scale)/2, h*(1+scale)/2)
+        resizeHandle.setX(w * (1 + scale) / 2f - resizeHandle.getWidth() / 2f);
+        resizeHandle.setY(h * (1 + scale) / 2f - resizeHandle.getHeight() / 2f);
     }
 
     /**右下角缩放手柄：车机助手样式——24×24 画对角线 */
