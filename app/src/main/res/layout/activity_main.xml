@@ -1,0 +1,434 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="?attr/panelBgColor"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="10dp">
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/tv_title"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:textColor="?attr/panelTextColorPrimary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="悬浮窗配置"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Status -->
+        <TextView
+            android:id="@+id/tv_status"
+            android:textSize="13sp"
+            android:textColor="?attr/panelTextColorSecondary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="○ 悬浮窗未启动"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_title" />
+
+
+        <!-- Home Button -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btn_home_app"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginEnd="12dp"
+            app:cardBackgroundColor="#FF4FC3F7"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toStartOf="@id/btn_exit_app"
+            app:layout_constraintTop_toTopOf="@id/tv_title"
+            app:layout_constraintBottom_toBottomOf="@id/tv_status">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="8dp"
+                android:src="@mipmap/btn_home"
+                app:tint="#FFFFFF" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Exit Button -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btn_exit_app"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:cardBackgroundColor="#FF4FC3F7"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/tv_title"
+            app:layout_constraintBottom_toBottomOf="@id/tv_status">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="8dp"
+                android:src="@mipmap/btn_exit"
+                app:tint="#FFFFFF" />
+        </com.google.android.material.card.MaterialCardView>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="10dp"
+        app:layout_constraintTop_toBottomOf="@id/tv_status"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Left Navigation Menu (Width: 180dp) -->
+        <ScrollView
+            android:layout_width="180dp"
+            android:layout_height="match_parent"
+            android:scrollbars="none"
+            android:paddingEnd="8dp">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!-- Menu 1: System & Appearance -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/menu_system_appearance"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    app:cardBackgroundColor="?attr/panelCardBgColor"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackground">
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp">
+
+                        <!-- Left active vertical stripe -->
+                        <View
+                            android:id="@+id/indicator_system_appearance"
+                            android:background="#FF4FC3F7"
+                            android:layout_width="4dp"
+                            android:layout_height="match_parent" />
+
+                        <TextView
+                            android:id="@+id/tv_menu_system_appearance"
+                            android:text="系统与外观"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="?attr/panelTextColorPrimary"
+                            android:gravity="center_vertical"
+                            android:layout_marginStart="12dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Menu: Color Settings -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/menu_color_settings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackground">
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp">
+
+                        <!-- Left active vertical stripe -->
+                        <View
+                            android:id="@+id/indicator_color_settings"
+                            android:background="#FF4FC3F7"
+                            android:visibility="invisible"
+                            android:layout_width="4dp"
+                            android:layout_height="match_parent" />
+
+                        <TextView
+                            android:id="@+id/tv_menu_color_settings"
+                            android:text="色调设置"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="?attr/panelTextColorSecondary"
+                            android:gravity="center_vertical"
+                            android:layout_marginStart="12dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Menu 2: Features & Avoidance -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/menu_features_avoidance"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackground">
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp">
+
+                        <!-- Left active vertical stripe (hidden by default) -->
+                        <View
+                            android:id="@+id/indicator_features_avoidance"
+                            android:background="#FF4FC3F7"
+                            android:visibility="invisible"
+                            android:layout_width="4dp"
+                            android:layout_height="match_parent" />
+
+                        <TextView
+                            android:id="@+id/tv_menu_features_avoidance"
+                            android:text="功能与避让"
+                            android:textSize="14sp"
+                            android:textColor="?attr/panelTextColorSecondary"
+                            android:gravity="center_vertical"
+                            android:layout_marginStart="12dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Menu 3: Regular Layout -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/menu_layout_normal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackground">
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp">
+
+                        <!-- Left active vertical stripe (hidden by default) -->
+                        <View
+                            android:id="@+id/indicator_layout_normal"
+                            android:background="#FF4FC3F7"
+                            android:visibility="invisible"
+                            android:layout_width="4dp"
+                            android:layout_height="match_parent" />
+
+                        <TextView
+                            android:id="@+id/tv_menu_layout_normal"
+                            android:text="常规布局"
+                            android:textSize="14sp"
+                            android:textColor="?attr/panelTextColorSecondary"
+                            android:gravity="center_vertical"
+                            android:layout_marginStart="12dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Menu 4: Smart Island Layout -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/menu_layout_minimal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackground">
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp">
+
+                        <!-- Left active vertical stripe (hidden by default) -->
+                        <View
+                            android:id="@+id/indicator_layout_minimal"
+                            android:background="#FF4FC3F7"
+                            android:visibility="invisible"
+                            android:layout_width="4dp"
+                            android:layout_height="match_parent" />
+
+                        <TextView
+                            android:id="@+id/tv_menu_layout_minimal"
+                            android:text="灵动布局"
+                            android:textSize="14sp"
+                            android:textColor="?attr/panelTextColorSecondary"
+                            android:gravity="center_vertical"
+                            android:layout_marginStart="12dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Menu 5: Traffic Light Config -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/menu_traffic_light"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackground">
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp">
+
+                        <!-- Left active vertical stripe (hidden by default) -->
+                        <View
+                            android:id="@+id/indicator_traffic_light"
+                            android:background="#FF4FC3F7"
+                            android:visibility="invisible"
+                            android:layout_width="4dp"
+                            android:layout_height="match_parent" />
+
+                        <TextView
+                            android:id="@+id/tv_menu_traffic_light"
+                            android:text="红绿灯配置"
+                            android:textSize="14sp"
+                            android:textColor="?attr/panelTextColorSecondary"
+                            android:gravity="center_vertical"
+                            android:layout_marginStart="12dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Menu 6: About Us -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/menu_about_us"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackground">
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp">
+
+                        <!-- Left active vertical stripe (hidden by default) -->
+                        <View
+                            android:id="@+id/indicator_about_us"
+                            android:background="#FF4FC3F7"
+                            android:visibility="invisible"
+                            android:layout_width="4dp"
+                            android:layout_height="match_parent" />
+
+                        <TextView
+                            android:id="@+id/tv_menu_about_us"
+                            android:text="关于我们"
+                            android:textSize="14sp"
+                            android:textColor="?attr/panelTextColorSecondary"
+                            android:gravity="center_vertical"
+                            android:layout_marginStart="12dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- Vertical Divider -->
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="?attr/panelDividerColor" />
+
+        <!-- Right Content Panels Container -->
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp">
+
+            <!-- Panel 1: System & Appearance -->
+            <include layout="@layout/panel_system_appearance" />
+
+            <!-- Panel 2: Color Settings -->
+            <include layout="@layout/panel_color_settings" />
+
+            <!-- Panel 3: Features & Avoidance -->
+            <include layout="@layout/panel_features_avoidance" />
+
+            <!-- Panel 4: Normal Navigation Layout -->
+            <include layout="@layout/panel_layout_normal" />
+
+            <!-- Panel 5: Minimal Layout -->
+            <include layout="@layout/panel_layout_minimal" />
+
+            <!-- Panel 6: Traffic Light Settings -->
+            <include layout="@layout/panel_traffic_light" />
+
+            <!-- Panel 7: About Us -->
+            <include layout="@layout/panel_about_us" />
+
+        </FrameLayout>
+    </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

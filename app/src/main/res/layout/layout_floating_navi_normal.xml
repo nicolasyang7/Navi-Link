@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/window_root"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <FrameLayout
+        android:id="@+id/root_layout"
+        android:layout_width="320dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="0dp"
+        android:background="@drawable/bg_floating_dark">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp">
+    <LinearLayout
+        android:id="@+id/ll_turn_icon_container"
+        android:layout_margin="10dp"
+        android:background="@drawable/bg_exit_shape"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_width="60dp"
+        android:layout_height="match_parent">
+        <ImageView
+            android:id="@+id/iv_turn_icon"
+            android:layout_width="60dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:scaleType="centerInside"
+            android:src="@mipmap/sou4_night_a530"
+            app:tint="#FFFFFF"/>
+        <TextView
+            android:id="@+id/tv_exit_info"
+            android:visibility="gone"
+            android:layout_marginBottom="5dp"
+            android:text="出口32A"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1">
+        <TextView
+            android:gravity="bottom"
+            android:id="@+id/tv_distance_num"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:includeFontPadding="false"
+            android:text="100"
+            android:textColor="#FFFFFF"
+            android:textSize="36sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_marginBottom="3dp"
+            android:layout_alignBottom="@id/tv_distance_num"
+            android:layout_toRightOf="@id/tv_distance_num"
+            android:id="@+id/tv_distance_unit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="米"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/tv_action"
+            android:layout_toRightOf="@id/tv_distance_unit"
+            android:layout_alignBottom="@id/tv_distance_unit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="进入"
+            android:visibility="visible"
+            android:textColor="#888888"
+            android:textSize="18sp"/>
+        <com.navi.link.view.TrafficLightView
+            android:id="@+id/ll_traffic_light_group"
+            android:visibility="gone"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="5dp"
+            android:layout_alignParentEnd="true"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"/>
+
+        <com.navi.link.view.CameraWarningView
+            android:id="@+id/ll_camera_dist_group"
+            android:visibility="gone"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="5dp"
+            android:layout_alignParentEnd="true"
+            android:background="@drawable/bg_traffic_light_capsule"
+            android:paddingStart="4dp"
+            android:paddingEnd="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp" />
+        <LinearLayout
+            android:gravity="center_vertical"
+            android:layout_alignParentBottom="true"
+            android:layout_width="match_parent"
+            android:layout_height="50dp">
+
+            <TextView
+
+                android:id="@+id/tv_road_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="下个道路名称"
+                android:textColor="#FFFFFF"
+                android:textSize="22sp"
+                android:textStyle="bold"/>
+            <LinearLayout
+                android:id="@+id/layout_navi_light_count_group"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginEnd="5dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <ImageView
+                    android:rotation="90"
+                    android:id="@+id/iv_navi_light_icon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/camera_light" />
+                <TextView
+                    android:id="@+id/tv_navi_light_count"
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="3个" />
+            </LinearLayout>
+        </LinearLayout>
+    </RelativeLayout>
+
+    </LinearLayout>
+
+
+            <!-- 车道线组件 -->
+            <com.navi.link.view.LaneLineView
+                android:id="@+id/lane_line_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginHorizontal="10dp"
+                android:visibility="gone" />
+
+            <!-- 区间测速水平蓝框胶囊条（位于 TMC 进度条上方） -->
+            <com.navi.link.view.IntervalSpeedView
+                android:id="@+id/interval_speed_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="4dp" />
+
+            <com.navi.link.view.TmcProgressBar
+                android:id="@+id/tmc_progress_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <!-- 底部容器（包括ETA信息栏与服务区） -->
+            <LinearLayout
+                android:id="@+id/layout_bottom_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_floating_dark_info"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layout_info_bar"
+                    android:background="@android:color/transparent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/tv_summary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1.1公里 · 4分钟"
+                        android:textColor="#E0E0E0"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <View
+                        android:id="@+id/v_divider"
+                        android:layout_width="1dp"
+                        android:layout_height="14dp"
+                        android:layout_marginStart="12dp"
+                        android:background="#E0E0E0"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/tv_summary"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/tv_eta"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:text="18:06到"
+                        android:textColor="#E0E0E0"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/v_divider"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <!-- 最近两个服务区 -->
+                <LinearLayout
+                    android:id="@+id/layout_sapa_group"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <View
+                        android:id="@+id/v_sapa_top_divider"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:background="#2AFFFFFF" />
+
+                    <!-- 第一服务区 -->
+                    <LinearLayout
+                        android:id="@+id/layout_sapa_row_1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="4dp">
+
+                        <ImageView
+                            android:tint="@color/white"
+                            tools:ignore="UseAppTint"
+                            android:id="@+id/iv_sapa_badge_1"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_marginEnd="8dp"
+                            android:padding="3dp"
+                            android:scaleType="fitCenter"/>
+
+                        <TextView
+                            android:id="@+id/tv_sapa_name_1"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text=""
+                            android:textColor="#E0E0E0"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:ellipsize="end"
+                            android:singleLine="true"/>
+
+                        <TextView
+                            android:id="@+id/tv_sapa_dist_1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textColor="#E0E0E0"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginStart="8dp"/>
+                    </LinearLayout>
+
+                    <!-- 第二服务区 -->
+                    <LinearLayout
+                        android:id="@+id/layout_sapa_row_2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:id="@+id/iv_sapa_badge_2"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_marginEnd="8dp"
+                            android:padding="3dp"
+                            android:tint="@color/white"
+                            android:scaleType="fitCenter"
+                            tools:ignore="UseAppTint" />
+
+                        <TextView
+                            android:id="@+id/tv_sapa_name_2"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text=""
+                            android:textColor="#E0E0E0"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:ellipsize="end"
+                            android:singleLine="true"/>
+
+                        <TextView
+                            android:id="@+id/tv_sapa_dist_2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textColor="#E0E0E0"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginStart="8dp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+</FrameLayout>
