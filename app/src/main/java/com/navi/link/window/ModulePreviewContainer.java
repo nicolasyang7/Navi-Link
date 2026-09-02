@@ -3,10 +3,7 @@ package com.navi.link.window;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.DashPathEffect;
 import android.graphics.Paint;
-import android.graphics.drawable.GradientDrawable;
-import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,7 +20,7 @@ import com.navi.link.view.TrafficLightView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-/**副屏/模拟屏模块容器（V13.16）：对齐车机助手 HUD 样式——卡片圆角背景 + 右下角对角线缩放手柄 + 连续缩放 */
+/**副屏/模拟屏模块容器（V13.17）：无框透明 + 组件本体拖动 + 右下角24dp对角线缩放手柄（对齐车机助手触点方案） */
 public class ModulePreviewContainer extends FrameLayout {
 
     public interface OnConfigChangeListener {
@@ -36,7 +33,7 @@ public class ModulePreviewContainer extends FrameLayout {
     private final ModuleConfig config;
     private View contentView;
     private ImageView standbyIcon;
-    private FrameLayout resizeHandle;
+    private View resizeHandle;
     private OnConfigChangeListener listener;
 
     private float dragBoundW = -1;
@@ -48,7 +45,7 @@ public class ModulePreviewContainer extends FrameLayout {
     private float startY = 0f;
     private boolean dragging = false;
     private boolean moved = false;
-    // 缩放（连续，车机助手算法）
+    // 缩放
     private float scaleStartX = 0f;
     private float scaleStartY = 0f;
     private float startScale = 1f;
@@ -58,17 +55,14 @@ public class ModulePreviewContainer extends FrameLayout {
         super(context);
         this.config = config;
 
+        // 关键：允许子 view（缩放手柄）超出边界显示 + 接收触摸
+        setClipChildren(false);
+        setClipToPadding(false);
+
         ModuleRegistry.ModuleInfo info = ModuleRegistry.get(config.moduleId);
         if (info == null) return;
 
-        // 卡片背景：车机助手 bg_cluster_normal（#33CCCCCC + 圆角8dp + #CCCCCC 1dp 描边）
-        GradientDrawable card = new GradientDrawable();
-        card.setShape(GradientDrawable.RECTANGLE);
-        card.setColor(0x33CCCCCC);
-        card.setCornerRadius(dp(8));
-        card.setStroke(dp(1), 0xFFCCCCCC);
-        setBackground(card);
-
+        // 无框透明（车机助手组件透明，投屏/预览都不带框）
         contentView = inflate(context, info.layoutRes, null);
         addView(contentView, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
@@ -85,7 +79,10 @@ public class ModulePreviewContainer extends FrameLayout {
         buildResizeHandle(context);
         setupDrag();
 
-        post(() -> applyInitialScale(config.scale));
+        post(() -> {
+            applyInitialScale(config.scale);
+            updateResizeHandlePosition();
+        });
     }
 
     public ModuleConfig getConfig() {
@@ -119,26 +116,27 @@ public class ModulePreviewContainer extends FrameLayout {
         float clamped = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
         config.scale = clamped;
         if (contentView != null) {
-            contentView.post(() -> {
-                // 车机助手：pivot 左上角 (0,0)
-                contentView.setPivotX(0);
-                contentView.setPivotY(0);
-                contentView.setScaleX(clamped);
-                contentView.setScaleY(clamped);
-            });
+            // 直接生效（无 post），pivot 左上角
+            contentView.setPivotX(0);
+            contentView.setPivotY(0);
+            contentView.setScaleX(clamped);
+            contentView.setScaleY(clamped);
         }
+        updateResizeHandlePosition();
     }
 
-    /**右下角缩放手柄：车机助手样式——24×24 画对角线角标 + 48dp 触摸热区 */
-    private void buildResizeHandle(Context context) {
-        resizeHandle = new FrameLayout(context);
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                dp(48), dp(48), Gravity.BOTTOM | Gravity.END);
-        addView(resizeHandle, lp);
-        resizeHandle.bringToFront();
+    /**缩放手柄定位到 contentView 视觉右下角（车机助手 updateResizeHandlePosition 同款） */
+    private void updateResizeHandlePosition() {
+        if (resizeHandle == null || contentView == null) return;
+        float w = contentView.getWidth() * contentView.getScaleX();
+        float h = contentView.getHeight() * contentView.getScaleY();
+        resizeHandle.setX(w - resizeHandle.getWidth() / 2f);
+        resizeHandle.setY(h - resizeHandle.getHeight() / 2f);
+    }
 
-        // 内部 24×24 对角线角标（居中在 48dp 热区里）
-        View handleIcon = new View(context) {
+    /**右下角缩放手柄：车机助手样式——24×24 画对角线 */
+    private void buildResizeHandle(Context context) {
+        resizeHandle = new View(context) {
             @Override
             protected void onDraw(Canvas canvas) {
                 super.onDraw(canvas);
@@ -152,10 +150,9 @@ public class ModulePreviewContainer extends FrameLayout {
                 canvas.drawLine(w * 0.6f, h, w, h * 0.6f, paint);
             }
         };
-        handleIcon.setBackgroundColor(Color.TRANSPARENT);
-        FrameLayout.LayoutParams iconLp = new FrameLayout.LayoutParams(
-                dp(24), dp(24), Gravity.CENTER);
-        resizeHandle.addView(handleIcon, iconLp);
+        resizeHandle.setBackgroundColor(Color.TRANSPARENT);
+        addView(resizeHandle, new FrameLayout.LayoutParams(dp(24), dp(24)));
+        resizeHandle.bringToFront();
 
         resizeHandle.setOnTouchListener((v, event) -> {
             switch (event.getActionMasked()) {
@@ -169,7 +166,7 @@ public class ModulePreviewContainer extends FrameLayout {
                     float deltaX = event.getRawX() - scaleStartX;
                     float deltaY = event.getRawY() - scaleStartY;
                     float effectiveDelta = Math.abs(deltaX) > Math.abs(deltaY) ? deltaX : deltaY;
-                    if (Math.abs(effectiveDelta) > dp(4)) {
+                    if (Math.abs(effectiveDelta) > dp(3)) {
                         scaling = true;
                         float baseWidth = contentView != null && contentView.getWidth() > 0
                                 ? contentView.getWidth() : dp(100);
@@ -192,7 +189,7 @@ public class ModulePreviewContainer extends FrameLayout {
         });
     }
 
-    /**点击模块本体 = 拖动（缩放手柄外的区域） */
+    /**点击模块本体 = 拖动（车机助手 setupHudComponentTouchListener 同款，getRawX + setX） */
     private void setupDrag() {
         setOnTouchListener((v, event) -> {
             switch (event.getActionMasked()) {
