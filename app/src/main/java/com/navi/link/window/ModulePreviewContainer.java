@@ -1,7 +1,10 @@
 package com.navi.link.window;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
+import android.graphics.Paint;
 import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -10,7 +13,6 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.navi.link.R;
 import com.navi.link.view.CameraWarningView;
@@ -21,21 +23,20 @@ import com.navi.link.view.TrafficLightView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-/**副屏/模拟屏模块容器（V13.15）：待机图标 + 数据层；点击模块本体拖动；右下角小圆点拉拽缩放（无双指） */
+/**副屏/模拟屏模块容器（V13.16）：对齐车机助手 HUD 样式——卡片圆角背景 + 右下角对角线缩放手柄 + 连续缩放 */
 public class ModulePreviewContainer extends FrameLayout {
 
     public interface OnConfigChangeListener {
         void onConfigChanged(ModuleConfig config);
     }
 
-    public static final float MIN_SCALE = 0.25f;
+    public static final float MIN_SCALE = 0.3f;
     public static final float MAX_SCALE = 3.0f;
-    public static final float SCALE_STEP = 0.25f;
 
     private final ModuleConfig config;
     private View contentView;
     private ImageView standbyIcon;
-    private FrameLayout scaleDot;
+    private FrameLayout resizeHandle;
     private OnConfigChangeListener listener;
 
     private float dragBoundW = -1;
@@ -47,10 +48,10 @@ public class ModulePreviewContainer extends FrameLayout {
     private float startY = 0f;
     private boolean dragging = false;
     private boolean moved = false;
-    // 缩放（小点拉拽）
-    private float scaleAnchorDist = 0f;
-    private float scaleAnchorX = 0f;
-    private float scaleAnchorY = 0f;
+    // 缩放（连续，车机助手算法）
+    private float scaleStartX = 0f;
+    private float scaleStartY = 0f;
+    private float startScale = 1f;
     private boolean scaling = false;
 
     public ModulePreviewContainer(Context context, ModuleConfig config) {
@@ -60,12 +61,20 @@ public class ModulePreviewContainer extends FrameLayout {
         ModuleRegistry.ModuleInfo info = ModuleRegistry.get(config.moduleId);
         if (info == null) return;
 
+        // 卡片背景：车机助手 bg_cluster_normal（#33CCCCCC + 圆角8dp + #CCCCCC 1dp 描边）
+        GradientDrawable card = new GradientDrawable();
+        card.setShape(GradientDrawable.RECTANGLE);
+        card.setColor(0x33CCCCCC);
+        card.setCornerRadius(dp(8));
+        card.setStroke(dp(1), 0xFFCCCCCC);
+        setBackground(card);
+
         contentView = inflate(context, info.layoutRes, null);
         addView(contentView, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 FrameLayout.LayoutParams.WRAP_CONTENT));
 
-        // 待机图标（底层，半透明水印）
+        // 待机图标（底层，半透明，线框风格）
         if (info.iconRes != 0) {
             standbyIcon = new ImageView(context);
             standbyIcon.setImageResource(info.iconRes);
@@ -73,7 +82,7 @@ public class ModulePreviewContainer extends FrameLayout {
             addView(standbyIcon, new FrameLayout.LayoutParams(dp(48), dp(48)));
         }
 
-        buildScaleDot(context);
+        buildResizeHandle(context);
         setupDrag();
 
         post(() -> applyInitialScale(config.scale));
@@ -98,57 +107,75 @@ public class ModulePreviewContainer extends FrameLayout {
         setY(y);
     }
 
+    /**外部统一缩放 */
+    public void applyScale(float newScale) {
+        applyInitialScale(newScale);
+        if (listener != null) {
+            listener.onConfigChanged(config);
+        }
+    }
+
     private void applyInitialScale(float newScale) {
         float clamped = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
         config.scale = clamped;
         if (contentView != null) {
             contentView.post(() -> {
-                if (contentView.getWidth() > 0) {
-                    contentView.setPivotX(contentView.getWidth() / 2f);
-                    contentView.setPivotY(contentView.getHeight() / 2f);
-                }
+                // 车机助手：pivot 左上角 (0,0)
+                contentView.setPivotX(0);
+                contentView.setPivotY(0);
                 contentView.setScaleX(clamped);
                 contentView.setScaleY(clamped);
             });
         }
     }
 
-    /**右下角缩放小点：视觉 20dp 圆点 + 48dp 透明触摸热区（车机友好），拉拽缩放 */
-    private void buildScaleDot(Context context) {
-        scaleDot = new FrameLayout(context);
-        // 透明触摸热区 48dp
+    /**右下角缩放手柄：车机助手样式——24×24 画对角线角标 + 48dp 触摸热区 */
+    private void buildResizeHandle(Context context) {
+        resizeHandle = new FrameLayout(context);
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
                 dp(48), dp(48), Gravity.BOTTOM | Gravity.END);
-        addView(scaleDot, lp);
-        scaleDot.bringToFront();
+        addView(resizeHandle, lp);
+        resizeHandle.bringToFront();
 
-        // 内部视觉小圆点 20dp，居中
-        View dot = new View(context);
-        GradientDrawable bg = new GradientDrawable();
-        bg.setShape(GradientDrawable.OVAL);
-        bg.setColor(0xCCFFFFFF);
-        bg.setStroke(dp(1), 0x55000000);
-        dot.setBackground(bg);
-        FrameLayout.LayoutParams dotLp = new FrameLayout.LayoutParams(
-                dp(20), dp(20), Gravity.CENTER);
-        scaleDot.addView(dot, dotLp);
+        // 内部 24×24 对角线角标（居中在 48dp 热区里）
+        View handleIcon = new View(context) {
+            @Override
+            protected void onDraw(Canvas canvas) {
+                super.onDraw(canvas);
+                Paint paint = new Paint();
+                paint.setColor(Color.WHITE);
+                paint.setStrokeWidth(dp(2));
+                paint.setAntiAlias(true);
+                int w = getWidth();
+                int h = getHeight();
+                canvas.drawLine(w * 0.3f, h, w, h * 0.3f, paint);
+                canvas.drawLine(w * 0.6f, h, w, h * 0.6f, paint);
+            }
+        };
+        handleIcon.setBackgroundColor(Color.TRANSPARENT);
+        FrameLayout.LayoutParams iconLp = new FrameLayout.LayoutParams(
+                dp(24), dp(24), Gravity.CENTER);
+        resizeHandle.addView(handleIcon, iconLp);
 
-        scaleDot.setOnTouchListener((v, event) -> {
+        resizeHandle.setOnTouchListener((v, event) -> {
             switch (event.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
                     scaling = false;
-                    scaleAnchorX = getX() + getWidth() / 2f;
-                    scaleAnchorY = getY() + getHeight() / 2f;
-                    scaleAnchorDist = distance(event.getRawX(), event.getRawY(), scaleAnchorX, scaleAnchorY);
+                    scaleStartX = event.getRawX();
+                    scaleStartY = event.getRawY();
+                    startScale = config.scale;
                     return true;
                 case MotionEvent.ACTION_MOVE: {
-                    float d = distance(event.getRawX(), event.getRawY(), scaleAnchorX, scaleAnchorY);
-                    float delta = d - scaleAnchorDist;
-                    if (Math.abs(delta) > dp(16)) {
+                    float deltaX = event.getRawX() - scaleStartX;
+                    float deltaY = event.getRawY() - scaleStartY;
+                    float effectiveDelta = Math.abs(deltaX) > Math.abs(deltaY) ? deltaX : deltaY;
+                    if (Math.abs(effectiveDelta) > dp(4)) {
                         scaling = true;
-                        float ns = delta > 0 ? config.scale + SCALE_STEP : config.scale - SCALE_STEP;
-                        applyInitialScale(ns);
-                        scaleAnchorDist = d;
+                        float baseWidth = contentView != null && contentView.getWidth() > 0
+                                ? contentView.getWidth() : dp(100);
+                        float newScale = startScale + (effectiveDelta / baseWidth);
+                        newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
+                        applyInitialScale(newScale);
                     }
                     return true;
                 }
@@ -165,7 +192,7 @@ public class ModulePreviewContainer extends FrameLayout {
         });
     }
 
-    /**点击模块本体 = 拖动（缩放小点外的区域） */
+    /**点击模块本体 = 拖动（缩放手柄外的区域） */
     private void setupDrag() {
         setOnTouchListener((v, event) -> {
             switch (event.getActionMasked()) {
@@ -210,12 +237,6 @@ public class ModulePreviewContainer extends FrameLayout {
                     return false;
             }
         });
-    }
-
-    private float distance(float x1, float y1, float x2, float y2) {
-        float dx = x1 - x2;
-        float dy = y1 - y2;
-        return (float) Math.sqrt(dx * dx + dy * dy);
     }
 
     /**模拟屏数据预览：车道线 */

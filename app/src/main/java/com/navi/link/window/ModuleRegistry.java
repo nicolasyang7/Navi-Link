@@ -24,7 +24,6 @@ public class ModuleRegistry {
  private static final List<ModuleInfo> MODULES = new ArrayList<>();
 
  static {
- MODULES.add(new ModuleInfo("module_speed", "速度", R.layout.module_speed, R.drawable.ic_module_speed));
  MODULES.add(new ModuleInfo("module_road_name", "道路名", R.layout.module_road_name, R.drawable.ic_module_road_name));
  MODULES.add(new ModuleInfo("module_lane_line", "车道线", R.layout.module_lane_line, R.drawable.ic_module_lane_line));
  MODULES.add(new ModuleInfo("module_traffic_light", "红绿灯", R.layout.module_traffic_light, R.drawable.ic_module_traffic_light));
