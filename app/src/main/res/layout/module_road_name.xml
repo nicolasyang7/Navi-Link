@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 官方样式：tv_cn_road_name 22sp 粗体白色 -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tv_module_road_name"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:ellipsize="end"
+    android:maxLines="1"
+    android:text="道路名"
+    android:textColor="#FFFFFFFF"
+    android:textSize="22sp"
+    android:textStyle="bold" />

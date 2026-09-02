@@ -1,0 +1,5 @@
+<com.navi.link.view.TmcProgressBar
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tmc_module"
+    android:layout_width="60dp"
+    android:layout_height="8dp" />
